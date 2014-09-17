@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/img/headphones.png</file>
+    </qresource>
+</RCC>
