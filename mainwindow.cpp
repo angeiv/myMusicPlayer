@@ -42,3 +42,8 @@ void MainWindow::on_action_About_triggered()
     About *ab = new About();
     ab->show();
 }
+
+void MainWindow::on_action_X_triggered()
+{
+    this->close();
+}
