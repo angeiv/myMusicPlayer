@@ -30,7 +30,6 @@
     <normaloff>:/resources/img/headphones.png</normaloff>:/resources/img/headphones.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget"/>
-  <widget class="QStatusBar" name="statusBar"/>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
@@ -48,7 +47,7 @@
     <addaction name="separator"/>
     <addaction name="action_X"/>
    </widget>
-   <widget class="QMenu" name="menu_2">
+   <widget class="QMenu" name="menu_Local">
     <property name="title">
      <string>本地(L)</string>
     </property>
@@ -75,12 +74,12 @@
     </property>
     <addaction name="action_H"/>
     <addaction name="separator"/>
-    <addaction name="action_3"/>
+    <addaction name="action_Update"/>
     <addaction name="separator"/>
     <addaction name="action_About"/>
    </widget>
    <addaction name="menu"/>
-   <addaction name="menu_2"/>
+   <addaction name="menu_Local"/>
    <addaction name="menu_O"/>
    <addaction name="menu_L"/>
    <addaction name="menu_A"/>
@@ -115,7 +114,7 @@
     <string>F1</string>
    </property>
   </action>
-  <action name="action_3">
+  <action name="action_Update">
    <property name="text">
     <string>在线升级...</string>
    </property>

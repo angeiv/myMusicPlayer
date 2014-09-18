@@ -3,6 +3,7 @@
 #include "QFileDialog"
 #include "QMessageBox"
 #include "about.h"
+#include "login/login.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -41,4 +42,10 @@ void MainWindow::on_action_About_triggered()
 {
     About *ab = new About();
     ab->show();
+}
+
+void MainWindow::on_action_Login_triggered()
+{
+    login *l = new login();
+    l->show();
 }
