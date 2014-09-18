@@ -20,7 +20,11 @@ private slots:
 
     void on_action_About_triggered();
 
+<<<<<<< HEAD
     void on_action_Login_triggered();
+=======
+    void on_action_X_triggered();
+>>>>>>> origin/master
 
 private:
     Ui::MainWindow *ui;

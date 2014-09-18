@@ -44,8 +44,14 @@ void MainWindow::on_action_About_triggered()
     ab->show();
 }
 
+<<<<<<< HEAD
 void MainWindow::on_action_Login_triggered()
 {
     login *l = new login();
     l->show();
+=======
+void MainWindow::on_action_X_triggered()
+{
+    this->close();
+>>>>>>> origin/master
 }
