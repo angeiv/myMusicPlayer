@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/img/headphones.png</file>
+        <file>resources/translations/qt_zh_CN.qm</file>
     </qresource>
 </RCC>

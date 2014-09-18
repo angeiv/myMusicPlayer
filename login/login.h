@@ -14,6 +14,15 @@ class login : public QDialog
 public:
     explicit login(QWidget *parent = 0);
     ~login();
+    int setVerifyCode();
+
+private slots:
+
+    void on_pushButtonLogin_clicked();
+
+    void on_pushButtonCancle_clicked();
+
+    bool checkVerifyCode();//检查验证码
 
 private:
     Ui::login *ui;
