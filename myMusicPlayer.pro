@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui multimedia winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,11 +15,15 @@ TEMPLATE = app
 SOURCES += main.cpp\
 mainwindow.cpp \
     about.cpp \
-    login/login.cpp
+    login/login.cpp \
+    musicplayer.cpp \
+    volumebutton.cpp
 
 HEADERS  += mainwindow.h \
     about.h \
-    login/login.h
+    login/login.h \
+    musicplayer.h \
+    volumebutton.h
 
 FORMS    += mainwindow.ui \
     about.ui \

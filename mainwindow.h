@@ -20,11 +20,11 @@ private slots:
 
     void on_action_About_triggered();
 
-
     void on_action_Login_triggered();
 
     void on_action_X_triggered();
 
+    void on_pushButtonPlayPause_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -19,7 +19,6 @@ void About::on_labelPage_linkActivated(const QString &link)
 {
     connect(ui->labelPage, SIGNAL(linkActivated(QString)), this, SLOT(openUrl(QString)));
     this->ui->labelPage->setOpenExternalLinks(true);
-
 }
 
 void About::openUrl(QString url)

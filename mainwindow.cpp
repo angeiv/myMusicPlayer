@@ -4,12 +4,16 @@
 #include "QMessageBox"
 #include "about.h"
 #include "login/login.h"
+#include "musicplayer.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    MusicPlayer mp;
+    mp.resize(300, 60);
+    mp.show();
 }
 
 MainWindow::~MainWindow()
@@ -50,7 +54,16 @@ void MainWindow::on_action_Login_triggered()
     login *l = new login();
     l->show();
 }
+
 void MainWindow::on_action_X_triggered()
 {
     this->close();
+}
+
+
+void MainWindow::on_pushButtonPlayPause_clicked()
+{
+    //有歌曲播放操作...
+    //
+    //ui->pushButtonPlayPause->setAttribute(Qt::);
 }

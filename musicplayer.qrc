@@ -2,5 +2,14 @@
     <qresource prefix="/">
         <file>resources/img/headphones.png</file>
         <file>resources/translations/qt_zh_CN.qm</file>
+        <file>resources/img/arrow-circle-left.png</file>
+        <file>resources/img/arrow-circle-right.png</file>
+        <file>resources/img/arrow-simle-right.png</file>
+        <file>resources/img/search.png</file>
+        <file>resources/img/double-arrows-blod-left.png</file>
+        <file>resources/img/double-arrows-blod-right.png</file>
+        <file>resources/img/double-arrows-left.png</file>
+        <file>resources/img/double-arrows-right.png</file>
+        <file>resources/img/lrc.jpg</file>
     </qresource>
 </RCC>
