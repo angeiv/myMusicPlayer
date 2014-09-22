@@ -3,8 +3,8 @@
  <author/>
  <comment/>
  <exportmacro/>
- <class>mymusicplayer</class>
- <widget name="mymusicplayer" class="QMainWindow">
+ <class>myMusicPlayer</class>
+ <widget name="myMusicPlayer" class="QWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -14,11 +14,8 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Form</string>
   </property>
-  <widget name="menubar" class="QMenuBar"/>
-  <widget name="centralwidget" class="QWidget"/>
-  <widget name="statusbar" class="QStatusBar"/>
  </widget>
  <pixmapfunction/>
  <connections/>

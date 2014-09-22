@@ -5,15 +5,20 @@
 #include "about.h"
 #include "login/login.h"
 #include "musicplayer.h"
+#include <QtWinExtras>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    MusicPlayer mp;
+/*    MusicPlayer mp;
+    connect(&mediaPlayer, SIGNAL(stateChanged(QMediaPlayer::State)),
+            this, SLOT(updateState(QMediaPlayer::State)));
+    ui->pushButtonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    connect(ui->pushButtonPlayPause, SIGNAL(clicked()), this, SLOT(togglePlayback()));
     mp.resize(300, 60);
-    mp.show();
+    mp.show();*/
 }
 
 MainWindow::~MainWindow()
@@ -65,5 +70,27 @@ void MainWindow::on_pushButtonPlayPause_clicked()
 {
     //有歌曲播放操作...
     //
-    //ui->pushButtonPlayPause->setAttribute(Qt::);
+    //...
 }
+
+void MainWindow::updateState(QMediaPlayer::State state)
+{
+    if (state == QMediaPlayer::PlayingState) {
+        ui->pushButtonPlayPause->setToolTip(tr("Pause"));
+        ui->pushButtonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    } else {
+        ui->pushButtonPlayPause->setToolTip(tr("Play"));
+        ui->pushButtonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    }
+}
+
+void MainWindow::togglePlayback()
+{
+    if (mediaPlayer.mediaStatus() == QMediaPlayer::NoMedia)
+        ;//openFile();
+    else if (mediaPlayer.state() == QMediaPlayer::PlayingState)
+        mediaPlayer.pause();
+    else
+        mediaPlayer.play();
+}
+

@@ -17,17 +17,20 @@ mainwindow.cpp \
     about.cpp \
     login/login.cpp \
     musicplayer.cpp \
-    volumebutton.cpp
+    volumebutton.cpp \
+    mymusicplayer.cpp
 
 HEADERS  += mainwindow.h \
     about.h \
     login/login.h \
     musicplayer.h \
-    volumebutton.h
+    volumebutton.h \
+    mymusicplayer.h
 
 FORMS    += mainwindow.ui \
     about.ui \
-    login/login.ui
+    login/login.ui \
+    mymusicplayer.ui
 
 OTHER_FILES +=
 
