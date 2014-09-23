@@ -17,6 +17,9 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(actionNew,SIGNAL(triggered()),this,SLOT(openFile()));//打开音乐文件
 
     connect(actionAbout,SIGNAL(triggered()),this,SLOT(aboutWindow()));//打开关于窗口
+
+    connect(addSong,SIGNAL(clicked()),this,SLOT(addsong()));
+    connect(cutSong,SIGNAL(clicked()),this,SLOT(cutsong()));
 }
 
 myMusicPlayer::~myMusicPlayer()
@@ -28,14 +31,17 @@ void myMusicPlayer::openFile()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"), "",  tr("MP3音乐文件(*.mp3);;全部文件(*.*)"));
 
+    if(filePath.isEmpty())
+        return;
+
     mediaPlayer.setMedia(QUrl::fromLocalFile(filePath));
 
     QString info = QUrl::fromLocalFile(filePath).fileName();
     info = info.split(".").first();
-    //qDebug()<<info;
+
     QString author = info.split("-").first();
     QString title = info.split("-").last();
-//qDebug()<<tableList->rowCount();
+
     tableList->insertRow(tableList->rowCount());
     tableList->setItem(tableList->rowCount()-1,
                        0,new QTableWidgetItem(title));
@@ -49,6 +55,32 @@ void myMusicPlayer::aboutWindow()
 {
     About *ab = new About();
     ab->show();
+}
+
+void myMusicPlayer::addsong()
+{
+    QString filePath = QFileDialog::getOpenFileName(this,tr("打开音乐文件"),"",
+                                                    tr("MP3音乐文件(*.mp3);;全部文件(*.*)"));
+    if(filePath.isEmpty())
+        return ;
+
+    mediaPlayer.setMedia(QUrl::fromLocalFile(filePath));
+    QString info = QUrl::fromLocalFile(filePath).fileName();
+    info = info.split(".").first();
+    QString author = info.split("-").first();
+    QString title = info.split("-").last();
+    tableList->insertRow(tableList->rowCount());
+    tableList->setItem(tableList->rowCount()-1,
+                       0,new QTableWidgetItem(title));
+    tableList->setItem(tableList->rowCount()-1,
+                       1,new QTableWidgetItem(author));
+}
+
+void myMusicPlayer::cutsong()
+{
+    int i = tableList->rowCount();
+    //qDebug()<<i;
+    tableList->removeRow(tableList->rowCount()-1);
 }
 
 void myMusicPlayer::initWindow()
@@ -111,5 +143,12 @@ void myMusicPlayer::initWindow()
     btnVolume = new QPushButton(this);
     btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
     btnVolume->setGeometry(620,495,32,32);
+
+    addSong = new QPushButton(this);
+    addSong->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+    addSong->setGeometry(521,440,32,32);
+    cutSong = new QPushButton(this);
+    cutSong->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
+    cutSong->setGeometry(555,440,32,32);
 
 }

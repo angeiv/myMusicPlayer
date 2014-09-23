@@ -27,6 +27,8 @@ public:
 public slots:
     void openFile();
     void aboutWindow();
+    void addsong();
+    void cutsong();
 
 private:
     Ui::myMusicPlayer *ui;
@@ -46,7 +48,8 @@ private:
     QSlider *volumeControl;
     QPushButton *btnVolume;
     QPushButton *btnVolumeControl;
-
+    QPushButton *addSong;
+    QPushButton *cutSong;
     QMediaPlayer mediaPlayer;
 
 /*private slots:
