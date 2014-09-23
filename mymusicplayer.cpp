@@ -57,6 +57,8 @@ void myMusicPlayer::initWindow()
     this->setWindowTitle("音乐魔盒");
     this->setWindowIcon(QIcon(":/resources/img/logo.ico"));
     this->setGeometry(QRect(0,0,780,550));
+    this->setMaximumSize(780,550);
+    this->setMinimumSize(780,550);
 
     //新建菜单栏
     menu = new QMenuBar(this);
