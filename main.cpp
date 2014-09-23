@@ -1,5 +1,7 @@
-#include "mainwindow.h"
+#include "mymusicplayer.h"
 #include <QApplication>
+#include <QDesktopWidget>
+
 
 #include "QTranslator"
 
@@ -13,9 +15,15 @@ int main(int argc, char *argv[])
     translator.load(":/resources/translations/qt_zh_CN.qm");
     a.installTranslator(&translator);
 
-    MainWindow w;
-    w.show();
+//    MainWindow w;
+//    w.show();
 //如何关闭主窗口的同时关闭所有的窗口？
+
+
+    myMusicPlayer *mp = new myMusicPlayer();
+    //把窗口居中显示
+    mp->move((QApplication::desktop()->width() - mp->width())/2,(QApplication::desktop()->height() - mp->height())/2);
+    mp->show();
 
     return a.exec();
 }
