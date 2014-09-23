@@ -24,12 +24,17 @@ public:
     void initWindow();
     ~myMusicPlayer();
 
+public slots:
+    void openFile();
+    void aboutWindow();
+
 private:
     Ui::myMusicPlayer *ui;
     QMenuBar *menu;
     QMenu *menuOpen;
     QMenu *menuAbout;
     QAction *actionNew;
+    QAction *actionAbout;
     QTextEdit *textEdit;
     QTableWidget *tableList;
     QPushButton *btnForward;
@@ -39,6 +44,13 @@ private:
     QLabel *timeProgress;
     QLabel *volumeShow;
     QSlider *volumeControl;
+    QPushButton *btnVolume;
+    QPushButton *btnVolumeControl;
+
+    QMediaPlayer mediaPlayer;
+
+/*private slots:
+    */
 };
 
 #endif // MYMUSICPLAYER_H
