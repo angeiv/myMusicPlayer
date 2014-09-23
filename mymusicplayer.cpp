@@ -28,14 +28,17 @@ void myMusicPlayer::openFile()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"), "",  tr("MP3音乐文件(*.mp3);;全部文件(*.*)"));
 
+    if(filePath.isEmpty())
+        return;
+
     mediaPlayer.setMedia(QUrl::fromLocalFile(filePath));
 
     QString info = QUrl::fromLocalFile(filePath).fileName();
     info = info.split(".").first();
-    //qDebug()<<info;
+
     QString author = info.split("-").first();
     QString title = info.split("-").last();
-//qDebug()<<tableList->rowCount();
+
     tableList->insertRow(tableList->rowCount());
     tableList->setItem(tableList->rowCount()-1,
                        0,new QTableWidgetItem(title));
