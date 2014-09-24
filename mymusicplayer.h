@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QMediaPlayer>
+#include <QMediaPlaylist>
 #include <QMenuBar>
 #include <QTextEdit>
 #include <QTableWidget>
@@ -29,7 +30,7 @@ public slots:
     void aboutWindow();
     void addsong();
     void cutsong();
-
+    void chickToPlay();
 private:
     Ui::myMusicPlayer *ui;
     QMenuBar *menu;
@@ -51,6 +52,7 @@ private:
     QPushButton *addSong;
     QPushButton *cutSong;
     QMediaPlayer mediaPlayer;
+    QMediaPlaylist playList;
 
 /*private slots:
     */

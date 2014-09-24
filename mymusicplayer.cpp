@@ -20,6 +20,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(addSong,SIGNAL(clicked()),this,SLOT(addsong()));
     connect(cutSong,SIGNAL(clicked()),this,SLOT(cutsong()));
+    connect(tableList,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(chickToPlay()));
 }
 
 myMusicPlayer::~myMusicPlayer()
@@ -79,13 +80,31 @@ void myMusicPlayer::addsong()
                        0,new QTableWidgetItem(title));
     tableList->setItem(tableList->rowCount()-1,
                        1,new QTableWidgetItem(author));
+    //tableList->setItem(tableList->rowCount()-1,
+                       //2,new QTableWidgetItem(filePath));
+    playList.addMedia(QUrl::fromLocalFile(filePath));
+
 }
 
 void myMusicPlayer::cutsong()
 {
-    int i = tableList->rowCount();
+    //int i = tableList->rowCount();
     //qDebug()<<i;
-    tableList->removeRow(tableList->rowCount()-1);
+    QTableWidgetItem *item = tableList->currentItem();
+    if(item ==Q_NULLPTR)return;
+    tableList->removeRow(item->row());
+    //tableList->removeRow(tableList->rowCount()-1);
+}
+
+void myMusicPlayer::chickToPlay()
+{
+   //qDebug()<<tableList->currentIndex();
+   int rowl = tableList->currentItem()->row();
+   //qDebug()<<rowl;
+   playList.setCurrentIndex(rowl);
+   qDebug()<<playList.currentIndex();
+   mediaPlayer.setPlaylist(&playList);
+   mediaPlayer.play();
 }
 
 void myMusicPlayer::initWindow()
@@ -116,13 +135,18 @@ void myMusicPlayer::initWindow()
     //设置播放列表
     tableList = new QTableWidget(this);
     tableList->setGeometry(QRect(520,23,260,451));
-    tableList->setColumnCount(2);
+    tableList->setColumnCount(3);
     tableList->setColumnWidth(0,150);
+    tableList->setColumnWidth(3,10);
     tableList->setRowCount(0);
     tableList->setEditTriggers(QAbstractItemView::NoEditTriggers);//设置禁止修改
     tableList->setSelectionMode(QAbstractItemView::SingleSelection);//设置只可选中单个
-    tableList->setHorizontalHeaderLabels(QStringList()<<"歌曲名"<<"歌手");
+    tableList->setHorizontalHeaderLabels(QStringList()<<"歌曲名"<<"歌手"<<"路径");
     //tableList->setItem(0,0,new QTableWidgetItem("1"));
+
+    //playList = new QMediaPlaylist(this);
+    //playList->
+
 
     //设置按钮
     btnBackword = new QPushButton(this);
@@ -151,9 +175,9 @@ void myMusicPlayer::initWindow()
 
     addSong = new QPushButton(this);
     addSong->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-    addSong->setGeometry(521,440,32,32);
+    addSong->setGeometry(521,425,32,32);
     cutSong = new QPushButton(this);
     cutSong->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-    cutSong->setGeometry(555,440,32,32);
+    cutSong->setGeometry(555,425,32,32);
 
 }
