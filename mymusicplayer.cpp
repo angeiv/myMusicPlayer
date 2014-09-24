@@ -4,11 +4,13 @@
 #include <QtWidgets>
 #include <QDebug>
 #include <string>
+#include <QTextCodec>
 
 myMusicPlayer::myMusicPlayer(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::myMusicPlayer)
 {
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF8"));
     ui->setupUi(this);
 
     initWindow();
@@ -20,6 +22,9 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(addSong,SIGNAL(clicked()),this,SLOT(addsong()));
     connect(cutSong,SIGNAL(clicked()),this,SLOT(cutsong()));
+
+    //载入播放列表
+    loadFromFile();
 }
 
 myMusicPlayer::~myMusicPlayer()
@@ -49,9 +54,7 @@ void myMusicPlayer::openFile()
                        0,new QTableWidgetItem(title));
     tableList->setItem(tableList->rowCount()-1,
                        1,new QTableWidgetItem(author));
-    tableList->selectRow(tableList->rowCount()-1);//选中当前行
-    tableList->selectColumn(0);//选中当前列
-qDebug()<<tableList->currentRow();
+
     mediaPlayer.play();
 
 }
@@ -69,7 +72,6 @@ void myMusicPlayer::addsong()
     if(filePath.isEmpty())
         return ;
 
-    mediaPlayer.setMedia(QUrl::fromLocalFile(filePath));
     QString info = QUrl::fromLocalFile(filePath).fileName();
     info = info.split(".").first();
     QString author = info.split("-").first();
@@ -79,13 +81,42 @@ void myMusicPlayer::addsong()
                        0,new QTableWidgetItem(title));
     tableList->setItem(tableList->rowCount()-1,
                        1,new QTableWidgetItem(author));
+    playList.addMedia(QUrl::fromLocalFile(filePath));
+
+    saveList2File();
 }
 
 void myMusicPlayer::cutsong()
 {
-    int i = tableList->rowCount();
-    //qDebug()<<i;
+    playList.removeMedia(tableList->rowCount()-1);
     tableList->removeRow(tableList->rowCount()-1);
+}
+
+void myMusicPlayer::loadFromFile()
+{
+    playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
+    int count = playList.mediaCount();
+    for(int i = 0; i < count ; i++) {
+            QString test = playList.media(i).canonicalUrl().fileName();
+            //qDebug()<<test;
+            QString info = test;
+            info = info.split(".").first();
+            QString author = info.split("-").first();
+            QString title = info.split("-").last();
+            tableList->insertRow(tableList->rowCount());
+            tableList->setItem(tableList->rowCount()-1,
+                               0,new QTableWidgetItem(title));
+            tableList->setItem(tableList->rowCount()-1,
+                               1,new QTableWidgetItem(author));
+    }
+}
+
+void myMusicPlayer::saveList2File()
+{
+    if(!playList.save(QUrl::fromLocalFile("plist.m3u"),"m3u")) {
+        //对话框提示
+    }
+    //qDebug()<<playList.errorString();
 }
 
 void myMusicPlayer::initWindow()
@@ -103,6 +134,8 @@ void myMusicPlayer::initWindow()
     menuOpen = menu->addMenu(tr("打开(&O)"));
     actionNew = menuOpen->addAction(tr("音乐(&M)..."));
     actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
+    menuList = menu->addMenu(tr("列表(&L)"));
+    actionList = menuList->addAction(tr("打开本地列表..."));
     menuAbout = menu->addMenu(tr("帮助(&H)"));
     actionAbout = menuAbout->addAction(tr("关于音乐魔盒..."));
 
@@ -123,6 +156,27 @@ void myMusicPlayer::initWindow()
     tableList->setSelectionMode(QAbstractItemView::SingleSelection);//设置只可选中单个
     tableList->setHorizontalHeaderLabels(QStringList()<<"歌曲名"<<"歌手");
     //tableList->setItem(0,0,new QTableWidgetItem("1"));
+    tableList->setShowGrid(false);
+    tableList->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+/*    //表格隔行变色
+    QPalette pal;
+    pal.setColor(QPalette::Base,QColor(255,0,0));
+    pal.setColor(QPalette::AlternateBase,QColor(0,255,0));
+    tableList->setPalette(pal);
+    tableList->setAlternatingRowColors(true);
+*/
+    //播放列表滚动条美化
+    tableList->horizontalScrollBar()->setStyleSheet("QScrollBar{background:transparent; height:10px;}"
+      "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
+      "QScrollBar::handle:hover{background:gray;}"
+      "QScrollBar::sub-line{background:transparent;}"
+      "QScrollBar::add-line{background:transparent;}");
+     tableList->verticalScrollBar()->setStyleSheet("QScrollBar{background:transparent; width: 10px;}"
+      "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
+      "QScrollBar::handle:hover{background:gray;}"
+      "QScrollBar::sub-line{background:transparent;}"
+      "QScrollBar::add-line{background:transparent;}");
 
     //设置按钮
     btnBackword = new QPushButton(this);
