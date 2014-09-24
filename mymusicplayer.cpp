@@ -29,13 +29,15 @@ myMusicPlayer::~myMusicPlayer()
 
 void myMusicPlayer::openFile()
 {
-    QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"), "",  tr("MP3音乐文件(*.mp3);;全部文件(*.*)"));
+    QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"),
+                                                    "",  tr("MP3音乐文件(*.mp3);;全部文件(*.*)"));
 
     if(filePath.isEmpty())
         return;
 
     mediaPlayer.setMedia(QUrl::fromLocalFile(filePath));
 
+    //文件名格式大部分为  歌手 - 歌曲名.mp3，分割内容显示在表格中
     QString info = QUrl::fromLocalFile(filePath).fileName();
     info = info.split(".").first();
 
@@ -47,8 +49,11 @@ void myMusicPlayer::openFile()
                        0,new QTableWidgetItem(title));
     tableList->setItem(tableList->rowCount()-1,
                        1,new QTableWidgetItem(author));
-
+    tableList->selectRow(tableList->rowCount()-1);//选中当前行
+    tableList->selectColumn(0);//选中当前列
+qDebug()<<tableList->currentRow();
     mediaPlayer.play();
+
 }
 
 void myMusicPlayer::aboutWindow()
