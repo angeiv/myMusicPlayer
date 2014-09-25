@@ -22,6 +22,8 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(addSong,SIGNAL(clicked()),this,SLOT(addsong()));
     connect(cutSong,SIGNAL(clicked()),this,SLOT(cutsong()));
+    connect(tableList,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(chickToPlay()));//双击打开歌曲
+
 
     //载入播放列表
     loadFromFile();
@@ -54,6 +56,8 @@ void myMusicPlayer::openFile()
                        0,new QTableWidgetItem(title));
     tableList->setItem(tableList->rowCount()-1,
                        1,new QTableWidgetItem(author));
+
+    playList.addMedia(QUrl::fromLocalFile(filePath));
 
     mediaPlayer.play();
 
@@ -88,8 +92,50 @@ void myMusicPlayer::addsong()
 
 void myMusicPlayer::cutsong()
 {
+
     playList.removeMedia(tableList->rowCount()-1);
-    tableList->removeRow(tableList->rowCount()-1);
+
+    QTableWidgetItem *item = tableList->currentItem();
+        if(item ==Q_NULLPTR)return;
+        tableList->removeRow(item->row());
+
+}
+void myMusicPlayer::chickToPlay()
+{
+   //qDebug()<<tableList->currentIndex();
+   int rowl = tableList->currentItem()->row();
+   //qDebug()<<rowl;
+   playList.setCurrentIndex(rowl);
+   qDebug()<<playList.currentIndex();
+   mediaPlayer.setPlaylist(&playList);
+   mediaPlayer.play();
+}
+
+void myMusicPlayer::loadFromFile()
+{
+    playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
+    int count = playList.mediaCount();
+    for(int i = 0; i < count ; i++) {
+            QString test = playList.media(i).canonicalUrl().fileName();
+            //qDebug()<<test;
+            QString info = test;
+            info = info.split(".").first();
+            QString author = info.split("-").first();
+            QString title = info.split("-").last();
+            tableList->insertRow(tableList->rowCount());
+            tableList->setItem(tableList->rowCount()-1,
+                               0,new QTableWidgetItem(title));
+            tableList->setItem(tableList->rowCount()-1,
+                               1,new QTableWidgetItem(author));
+    }
+}
+
+void myMusicPlayer::saveList2File()
+{
+    if(!playList.save(QUrl::fromLocalFile("plist.m3u"),"m3u")) {
+        //对话框提示
+    }
+    //qDebug()<<playList.errorString();
 }
 
 void myMusicPlayer::loadFromFile()
