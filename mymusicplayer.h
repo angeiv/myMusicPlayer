@@ -53,6 +53,7 @@ private:
     QPushButton *btnVolumeControl;
     QPushButton *addSong;//添加歌曲
     QPushButton *cutSong;//删除歌曲
+    QPushButton *btnStart;
     QMediaPlayer mediaPlayer;//音乐播放
     QMediaPlaylist playList;//音乐播放列表
 
@@ -61,7 +62,11 @@ private:
 private slots:
     void loadFromFile();
     void saveList2File();
-    void chickToPlay();
+    void doubleClickToPlay();
+    void playerPause();
+    void playerStart();
+    void playerNext();
+    void playerForward();
 };
 
 #endif // MYMUSICPLAYER_H
