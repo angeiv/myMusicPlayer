@@ -61,6 +61,7 @@ private:
 private slots:
     void loadFromFile();
     void saveList2File();
+    void chickToPlay();
 };
 
 #endif // MYMUSICPLAYER_H
