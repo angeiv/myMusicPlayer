@@ -10,8 +10,8 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::myMusicPlayer)
 {
-    //QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF8"));
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GB2312"));
+
     ui->setupUi(this);
 
     initWindow();
@@ -110,12 +110,12 @@ void myMusicPlayer::cutsong()
 void myMusicPlayer::doubleClickToPlay()
 {
 
-   int rowl = tableList->currentItem()->row();
+    int rowl = tableList->currentItem()->row();
 
-   playList.setCurrentIndex(rowl);
+    playList.setCurrentIndex(rowl);
 
-   mediaPlayer.setMedia(playList.media(rowl).canonicalUrl());
-   mediaPlayer.play();
+    mediaPlayer.setMedia(playList.media(rowl).canonicalUrl());
+    mediaPlayer.play();
 }
 
 void myMusicPlayer::playerPause()
@@ -138,12 +138,12 @@ void myMusicPlayer::playerNext()
     int row2 =tableList->rowCount();
     int rowl = tableList->currentItem()->row();
     playList.setCurrentIndex(rowl);
-    qDebug()<<playList.currentIndex();
+
     if(rowl<row2-1)
     {
-    mediaPlayer.setMedia(playList.media(rowl+1).canonicalUrl());
-    mediaPlayer.play();
-    tableList->setCurrentCell(rowl+1,0);
+        mediaPlayer.setMedia(playList.media(rowl+1).canonicalUrl());
+        mediaPlayer.play();
+        tableList->setCurrentCell(rowl+1,0);
     }
     else
     {
@@ -163,9 +163,9 @@ void myMusicPlayer::playerForward()
     playList.setCurrentIndex(rowl);
     if(rowl>0)
     {
-    mediaPlayer.setMedia(playList.media(rowl-1).canonicalUrl());
-    mediaPlayer.play();
-    tableList->setCurrentCell(rowl-1,0);
+        mediaPlayer.setMedia(playList.media(rowl-1).canonicalUrl());
+        mediaPlayer.play();
+        tableList->setCurrentCell(rowl-1,0);
     }
     else
     {
@@ -180,20 +180,22 @@ void myMusicPlayer::playerForward()
 
 void myMusicPlayer::loadFromFile()
 {
+    QTextCodec *codec = QTextCodec::codecForName("GB2312");
     playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
     int count = playList.mediaCount();
     for(int i = 0; i < count ; i++) {
-            QString test = playList.media(i).canonicalUrl().fileName();
-            //qDebug()<<test;
-            QString info = test;
-            info = info.split(".").first();
-            QString author = info.split("-").first();
-            QString title = info.split("-").last();
-            tableList->insertRow(tableList->rowCount());
-            tableList->setItem(tableList->rowCount()-1,
-                               0,new QTableWidgetItem(title));
-            tableList->setItem(tableList->rowCount()-1,
-                               1,new QTableWidgetItem(author));
+        //QString test = codec->toUnicode(playList.media(i).canonicalUrl().fileName().toUtf8());
+        QString test = QString::fromLocal8Bit(playList.media(i).canonicalUrl().fileName().toUtf8().data());
+        qDebug()<<test.toUtf8().data();
+        QString info = test;
+        info = info.split(".").first();
+        QString author = info.split("-").first();
+        QString title = info.split("-").last();
+        tableList->insertRow(tableList->rowCount());
+        tableList->setItem(tableList->rowCount()-1,
+                           0,new QTableWidgetItem(title));
+        tableList->setItem(tableList->rowCount()-1,
+                           1,new QTableWidgetItem(author));
     }
 }
 
@@ -246,7 +248,7 @@ void myMusicPlayer::initWindow()
     tableList->setShowGrid(false);
     tableList->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-/*    //表格隔行变色
+    /*    //表格隔行变色
     QPalette pal;
     pal.setColor(QPalette::Base,QColor(255,0,0));
     pal.setColor(QPalette::AlternateBase,QColor(0,255,0));
@@ -255,15 +257,15 @@ void myMusicPlayer::initWindow()
 */
     //播放列表滚动条美化
     tableList->horizontalScrollBar()->setStyleSheet("QScrollBar{background:transparent; height:10px;}"
-      "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
-      "QScrollBar::handle:hover{background:gray;}"
-      "QScrollBar::sub-line{background:transparent;}"
-      "QScrollBar::add-line{background:transparent;}");
-     tableList->verticalScrollBar()->setStyleSheet("QScrollBar{background:transparent; width: 10px;}"
-      "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
-      "QScrollBar::handle:hover{background:gray;}"
-      "QScrollBar::sub-line{background:transparent;}"
-      "QScrollBar::add-line{background:transparent;}");
+                                                    "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
+                                                    "QScrollBar::handle:hover{background:gray;}"
+                                                    "QScrollBar::sub-line{background:transparent;}"
+                                                    "QScrollBar::add-line{background:transparent;}");
+    tableList->verticalScrollBar()->setStyleSheet("QScrollBar{background:transparent; width: 10px;}"
+                                                  "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
+                                                  "QScrollBar::handle:hover{background:gray;}"
+                                                  "QScrollBar::sub-line{background:transparent;}"
+                                                  "QScrollBar::add-line{background:transparent;}");
 
     //设置按钮
     btnBackword = new QPushButton(this);
