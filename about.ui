@@ -84,7 +84,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>上次更新时间 2014年9月23日</string>
+    <string>上次更新时间 2014年9月24日</string>
    </property>
   </widget>
   <widget class="QWidget" name="formLayoutWidget">
@@ -202,7 +202,8 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;设置label颜色 &lt;a href=&quot;http://blog.sina.com.cn/s/blog_9d16de810100zs6r.htm&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://blog.sina.com.cn/s/blog_9d16de810100zs6r.htm&lt;/span&gt;&lt;/a&gt;l 作者 等待黎明&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;字符串数字互转 &lt;a href=&quot;http://www.cnblogs.com/gnuhpc/archive/2012/12/10/2811956.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.cnblogs.com/gnuhpc/archive/2012/12/10/2811956.html&lt;/span&gt;&lt;/a&gt; 作者 gnuhpc&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Qt验证码 &lt;a href=&quot;http://codinging.diandian.com/post/2013-04-04/Qt-make-valid-code&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://codinging.diandian.com/post/2013-04-04/Qt-make-valid-code&lt;/span&gt;&lt;/a&gt; 作者 漂木的笔记簿&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;label超链接 &lt;a href=&quot;http://www.educity.cn/wenda/192622.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.educity.cn/wenda/192622.html&lt;/span&gt;&lt;/a&gt; 作者 tomandlogo163&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;label超链接 &lt;a href=&quot;http://www.educity.cn/wenda/192622.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.educity.cn/wenda/192622.html&lt;/span&gt;&lt;/a&gt; 作者 tomandlogo163&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;QTableWidget详解（样式、右键菜单、表头塌陷、多选等）  &lt;a href=&quot;http://blog.sina.com.cn/s/blog_a6fb6cc90101dd5u.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://blog.sina.com.cn/s/blog_a6fb6cc90101dd5u.html&lt;/span&gt;&lt;/a&gt;  作者：╰☆奋斗ing❤孩子`&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
  </widget>

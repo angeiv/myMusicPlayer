@@ -30,32 +30,38 @@ public slots:
     void aboutWindow();
     void addsong();
     void cutsong();
-    void chickToPlay();
+
 private:
     Ui::myMusicPlayer *ui;
-    QMenuBar *menu;
-    QMenu *menuOpen;
-    QMenu *menuAbout;
-    QAction *actionNew;
-    QAction *actionAbout;
-    QTextEdit *textEdit;
-    QTableWidget *tableList;
-    QPushButton *btnForward;
-    QPushButton *btnPlayPause;
-    QPushButton *btnBackword;
-    QSlider *progressBar;
-    QLabel *timeProgress;
-    QLabel *volumeShow;
-    QSlider *volumeControl;
+    QMenuBar *menu;//菜单栏
+    QMenu *menuOpen;//打开
+    QAction *actionNew;//打开音乐
+    QMenu *menuList;//列表
+    QAction *actionList;//本地列表
+    QMenu *menuAbout;//关于
+    QAction *actionAbout;//关于音乐魔盒
+    QTextEdit *textEdit;//歌词区
+    QTableWidget *tableList;//歌曲列表
+    QPushButton *btnForward;//上一曲
+    QPushButton *btnPlayPause;//播放暂停
+    QPushButton *btnBackword;//下一曲
+    QSlider *progressBar;//歌曲进度条
+    QLabel *timeProgress;//歌曲播放进度时间
+    QLabel *volumeShow;//音量
+    QSlider *volumeControl;//音量控制
     QPushButton *btnVolume;
     QPushButton *btnVolumeControl;
-    QPushButton *addSong;
-    QPushButton *cutSong;
-    QMediaPlayer mediaPlayer;
-    QMediaPlaylist playList;
+    QPushButton *addSong;//添加歌曲
+    QPushButton *cutSong;//删除歌曲
+    QMediaPlayer mediaPlayer;//音乐播放
+    QMediaPlaylist playList;//音乐播放列表
 
-/*private slots:
-    */
+
+
+private slots:
+    void loadFromFile();
+    void saveList2File();
+    void chickToPlay();
 };
 
 #endif // MYMUSICPLAYER_H
