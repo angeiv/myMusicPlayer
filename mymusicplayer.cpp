@@ -109,11 +109,11 @@ void myMusicPlayer::cutsong()
 }
 void myMusicPlayer::doubleClickToPlay()
 {
-   //qDebug()<<tableList->currentIndex();
+
    int rowl = tableList->currentItem()->row();
-   //qDebug()<<rowl;
+
    playList.setCurrentIndex(rowl);
-   qDebug()<<playList.currentIndex();
+
    mediaPlayer.setMedia(playList.media(rowl).canonicalUrl());
    mediaPlayer.play();
 }
@@ -157,7 +157,7 @@ void myMusicPlayer::playerNext()
 
 void myMusicPlayer::playerForward()
 {
-    //static int i=0;
+
     int row2 = tableList->rowCount();
     int rowl = tableList->currentItem()->row();
     playList.setCurrentIndex(rowl);
@@ -175,7 +175,7 @@ void myMusicPlayer::playerForward()
         tableList->setCurrentCell(rowl-1,0);
 
     }
-    //i++;
+
 }
 
 void myMusicPlayer::loadFromFile()
@@ -205,32 +205,6 @@ void myMusicPlayer::saveList2File()
     //qDebug()<<playList.errorString();
 }
 
-void myMusicPlayer::loadFromFile()
-{
-    playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
-    int count = playList.mediaCount();
-    for(int i = 0; i < count ; i++) {
-            QString test = playList.media(i).canonicalUrl().fileName();
-            //qDebug()<<test;
-            QString info = test;
-            info = info.split(".").first();
-            QString author = info.split("-").first();
-            QString title = info.split("-").last();
-            tableList->insertRow(tableList->rowCount());
-            tableList->setItem(tableList->rowCount()-1,
-                               0,new QTableWidgetItem(title));
-            tableList->setItem(tableList->rowCount()-1,
-                               1,new QTableWidgetItem(author));
-    }
-}
-
-void myMusicPlayer::saveList2File()
-{
-    if(!playList.save(QUrl::fromLocalFile("plist.m3u"),"m3u")) {
-        //对话框提示
-    }
-    //qDebug()<<playList.errorString();
-}
 
 void myMusicPlayer::initWindow()
 {
