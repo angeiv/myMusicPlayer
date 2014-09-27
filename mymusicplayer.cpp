@@ -1,6 +1,7 @@
-#include "mymusicplayer.h"
+﻿#include "mymusicplayer.h"
 #include "ui_mymusicplayer.h"
 #include "about.h"
+#include "login/login.h"
 #include <QtWidgets>
 #include <QDebug>
 #include <string>
@@ -28,6 +29,8 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(btnStart,SIGNAL(clicked())  ,this,SLOT(playerStart()));
     connect(btnForward,SIGNAL(clicked()),this,SLOT(playerNext()));
     connect(btnBackword,SIGNAL(clicked()),this,SLOT(playerForward()));
+
+    connect(actionLogin,SIGNAL(triggered()),this,SLOT(loginWindow()));
 
 
     //载入播放列表
@@ -105,6 +108,13 @@ void myMusicPlayer::cutsong()
     playList.removeMedia(item->row());
     tableList->removeRow(item->row());
     saveList2File();
+
+}
+
+void myMusicPlayer::loginWindow()
+{
+    login *l = new login();
+    l->show();
 
 }
 void myMusicPlayer::doubleClickToPlay()
@@ -225,6 +235,8 @@ void myMusicPlayer::initWindow()
     actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
     menuList = menu->addMenu(tr("列表(&L)"));
     actionList = menuList->addAction(tr("打开本地列表..."));
+    menuLogin = menu->addMenu("登陆");
+    actionLogin = menuLogin->addAction(tr("登陆账号..."));
     menuAbout = menu->addMenu(tr("帮助(&H)"));
     actionAbout = menuAbout->addAction(tr("关于音乐魔盒..."));
 

@@ -1,4 +1,4 @@
-#ifndef MYMUSICPLAYER_H
+﻿#ifndef MYMUSICPLAYER_H
 #define MYMUSICPLAYER_H
 
 #include <QWidget>
@@ -30,6 +30,7 @@ public slots:
     void aboutWindow();
     void addsong();
     void cutsong();
+    void loginWindow();
 
 private:
     Ui::myMusicPlayer *ui;
@@ -38,6 +39,8 @@ private:
     QAction *actionNew;//打开音乐
     QMenu *menuList;//列表
     QAction *actionList;//本地列表
+    QMenu *menuLogin;
+    QAction *actionLogin;
     QMenu *menuAbout;//关于
     QAction *actionAbout;//关于音乐魔盒
     QTextEdit *textEdit;//歌词区
