@@ -70,6 +70,8 @@ private slots:
     void playerStart();
     void playerNext();
     void playerForward();
+    void updatePosition(qint64 position);//进度条和播放位置显示
+    void setPosition(int position);
 };
 
 #endif // MYMUSICPLAYER_H

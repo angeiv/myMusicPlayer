@@ -32,6 +32,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(actionLogin,SIGNAL(triggered()),this,SLOT(loginWindow()));
 
+    connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));//播放进度显示
 
     //载入播放列表
     loadFromFile();
@@ -45,7 +46,7 @@ myMusicPlayer::~myMusicPlayer()
 void myMusicPlayer::openFile()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"),
-                                                    "",  tr("MP3音乐文件(*.mp3);;全部文件(*.*)"));
+                                                    "",  tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma);;全部文件(*.*)"));
 
     if(filePath.isEmpty())
         return;
@@ -80,7 +81,7 @@ void myMusicPlayer::aboutWindow()
 void myMusicPlayer::addsong()
 {
     QString filePath = QFileDialog::getOpenFileName(this,tr("打开音乐文件"),"",
-                                                    tr("MP3音乐文件(*.mp3);;全部文件(*.*)"));
+                                                    tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma);;全部文件(*.*)"));
     if(filePath.isEmpty())
         return ;
 
@@ -126,6 +127,8 @@ void myMusicPlayer::doubleClickToPlay()
 
     mediaPlayer.setMedia(playList.media(rowl).canonicalUrl());
     mediaPlayer.play();
+    progressBar->setValue(0);
+    timeProgress->setText(tr("00:00/00:00"));
 }
 
 void myMusicPlayer::playerPause()
@@ -148,6 +151,9 @@ void myMusicPlayer::playerNext()
     int row2 =tableList->rowCount();
     int rowl = tableList->currentItem()->row();
     playList.setCurrentIndex(rowl);
+
+    progressBar->setValue(0);
+    timeProgress->setText(tr("00:00/00:00"));
 
     if(rowl<row2-1)
     {
@@ -188,9 +194,30 @@ void myMusicPlayer::playerForward()
 
 }
 
+void myMusicPlayer::updatePosition(qint64 position)
+{
+    QTime durationMusic(0, mediaPlayer.duration() / 60000,(mediaPlayer.duration() - mediaPlayer.duration()/60000*60000)/1000);
+
+    if(progressBar->value() < 100) {
+        progressBar->setValue(position*100/mediaPlayer.duration());
+        QTime duration(0, position / 60000, qRound((position % 60000) / 1000.0));
+        timeProgress->setText(duration.toString(tr("mm:ss")) + "/" + durationMusic.toString(tr("mm:ss")));
+    }
+    else {
+        playerNext();
+    }
+}
+
+void myMusicPlayer::setPosition(int position)
+{
+    // avoid seeking when the slider value change is triggered from updatePosition()
+    /*if (qAbs(mediaPlayer.position() - position) > 99)
+        mediaPlayer.setPosition(position);*/
+}
+
 void myMusicPlayer::loadFromFile()
 {
-    QTextCodec *codec = QTextCodec::codecForName("GB2312");
+    //QTextCodec *codec = QTextCodec::codecForName("GB2312");
     playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
     int count = playList.mediaCount();
     for(int i = 0; i < count ; i++) {
@@ -256,7 +283,7 @@ void myMusicPlayer::initWindow()
     tableList->setEditTriggers(QAbstractItemView::NoEditTriggers);//设置禁止修改
     tableList->setSelectionMode(QAbstractItemView::SingleSelection);//设置只可选中单个
     tableList->setHorizontalHeaderLabels(QStringList()<<"歌曲名"<<"歌手");
-    //tableList->setItem(0,0,new QTableWidgetItem("1"));
+
     tableList->setShowGrid(false);
     tableList->setSelectionBehavior(QAbstractItemView::SelectRows);
 
@@ -303,7 +330,11 @@ void myMusicPlayer::initWindow()
 
     progressBar = new QSlider(this);
     progressBar->setOrientation(Qt::Horizontal);
+    connect(progressBar,SIGNAL(valueChanged(int)),this,SLOT(setPosition(int)));
     progressBar->setGeometry(210,500,400,20);
+
+    timeProgress = new QLabel(tr("00:00/00:00"), this);
+    timeProgress->setGeometry(545,515,80,20);
 
     btnVolume = new QPushButton(this);
     btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
