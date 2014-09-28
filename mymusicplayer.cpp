@@ -36,6 +36,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     //载入播放列表
     loadFromFile();
+    mediaPlayer.setPlaylist(&playList);
 }
 
 myMusicPlayer::~myMusicPlayer()
@@ -46,7 +47,7 @@ myMusicPlayer::~myMusicPlayer()
 void myMusicPlayer::openFile()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"),
-                                                    "",  tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma);;全部文件(*.*)"));
+                                                    "",  tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
 
     if(filePath.isEmpty())
         return;
@@ -81,7 +82,7 @@ void myMusicPlayer::aboutWindow()
 void myMusicPlayer::addsong()
 {
     QString filePath = QFileDialog::getOpenFileName(this,tr("打开音乐文件"),"",
-                                                    tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma);;全部文件(*.*)"));
+                                                    tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
     if(filePath.isEmpty())
         return ;
 
@@ -194,25 +195,60 @@ void myMusicPlayer::playerForward()
 
 }
 
+void myMusicPlayer::initPosition()
+{
+    progressBar = new QSlider(this);
+    progressBar->setOrientation(Qt::Horizontal);
+    connect(progressBar,SIGNAL(valueChanged(int)),this,SLOT(setPosition(int)));
+    progressBar->setGeometry(210,500,400,20);
+
+    timeProgress = new QLabel(tr("00:00/00:00"), this);
+    timeProgress->setGeometry(545,515,80,20);
+}
+
+void myMusicPlayer::resetPosition()
+{
+    progressBar->setValue(0);
+    timeProgress->setText(tr("00:00/00:00"));
+}
+
 void myMusicPlayer::updatePosition(qint64 position)
 {
-    QTime durationMusic(0, mediaPlayer.duration() / 60000,(mediaPlayer.duration() - mediaPlayer.duration()/60000*60000)/1000);
+    QTime durationMusic(0, mediaPlayer.duration() / 60000,(mediaPlayer.duration() - mediaPlayer.duration()/60000*60000)/1000+1);
 
-    if(progressBar->value() < 100) {
-        progressBar->setValue(position*100/mediaPlayer.duration());
-        QTime duration(0, position / 60000, qRound((position % 60000) / 1000.0));
-        timeProgress->setText(duration.toString(tr("mm:ss")) + "/" + durationMusic.toString(tr("mm:ss")));
-    }
-    else {
-        playerNext();
-    }
+    progressBar->setValue(position*100/mediaPlayer.duration());
+    QTime duration(0, position / 60000, qRound((position % 60000) / 1000.0));
+    timeProgress->setText(duration.toString(tr("mm:ss")) + "/" + durationMusic.toString(tr("mm:ss")));
+
 }
 
 void myMusicPlayer::setPosition(int position)
 {
-    // avoid seeking when the slider value change is triggered from updatePosition()
-    /*if (qAbs(mediaPlayer.position() - position) > 99)
-        mediaPlayer.setPosition(position);*/
+
+/*    if (mediaPlayer.position()*100/mediaPlayer.duration() != position) {
+        updatePosition(position);
+    }*/
+    qDebug()<<mediaPlayer.position()*100/mediaPlayer.duration()<<position;
+}
+
+void myMusicPlayer::setPlaybackModeLoop()
+{
+    playList.setPlaybackMode(QMediaPlaylist::Loop);
+}
+
+void myMusicPlayer::setPlaybackModeRandom()
+{
+    playList.setPlaybackMode(QMediaPlaylist::Random);
+}
+
+void myMusicPlayer::setPlaybackModeCurrentLoop()
+{
+    playList.setPlaybackMode(QMediaPlaylist::CurrentItemInLoop);
+}
+
+void myMusicPlayer::setPlaybackModeSequential()
+{
+    playList.setPlaybackMode(QMediaPlaylist::Sequential);
 }
 
 void myMusicPlayer::loadFromFile()
@@ -328,13 +364,7 @@ void myMusicPlayer::initWindow()
     btnForward->setCursor(Qt::PointingHandCursor);
     btnStart->hide();
 
-    progressBar = new QSlider(this);
-    progressBar->setOrientation(Qt::Horizontal);
-    connect(progressBar,SIGNAL(valueChanged(int)),this,SLOT(setPosition(int)));
-    progressBar->setGeometry(210,500,400,20);
-
-    timeProgress = new QLabel(tr("00:00/00:00"), this);
-    timeProgress->setGeometry(545,515,80,20);
+    initPosition();
 
     btnVolume = new QPushButton(this);
     btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
@@ -347,4 +377,6 @@ void myMusicPlayer::initWindow()
     cutSong->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
     cutSong->setGeometry(555,440,32,32);
 
+    //设置默认播放模式：列表循环
+    setPlaybackModeLoop();
 }
