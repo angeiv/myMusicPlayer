@@ -11,7 +11,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::myMusicPlayer)
 {
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GB2312"));
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
 
     ui->setupUi(this);
 
@@ -36,7 +36,6 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     //载入播放列表
     loadFromFile();
-    mediaPlayer.setPlaylist(&playList);
 }
 
 myMusicPlayer::~myMusicPlayer()
@@ -68,6 +67,7 @@ void myMusicPlayer::openFile()
                        1,new QTableWidgetItem(author));
 
     playList.addMedia(QUrl::fromLocalFile(filePath));
+    tableList->setCurrentCell(tableList->rowCount(),0);
     saveList2File();
     mediaPlayer.play();
 
@@ -128,6 +128,7 @@ void myMusicPlayer::doubleClickToPlay()
 
     mediaPlayer.setMedia(playList.media(rowl).canonicalUrl());
     mediaPlayer.play();
+
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00/00:00"));
 }
@@ -228,7 +229,7 @@ void myMusicPlayer::setPosition(int position)
 /*    if (mediaPlayer.position()*100/mediaPlayer.duration() != position) {
         updatePosition(position);
     }*/
-    qDebug()<<mediaPlayer.position()*100/mediaPlayer.duration()<<position;
+    //qDebug()<<mediaPlayer.position()*100/mediaPlayer.duration()<<position;
 }
 
 void myMusicPlayer::setPlaybackModeLoop()
@@ -253,17 +254,24 @@ void myMusicPlayer::setPlaybackModeSequential()
 
 void myMusicPlayer::loadFromFile()
 {
-    //QTextCodec *codec = QTextCodec::codecForName("GB2312");
+    QTextCodec *codec=QTextCodec::codecForName("UTF-8");
+
     playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
+    mediaPlayer.setPlaylist(&playList);
     int count = playList.mediaCount();
     for(int i = 0; i < count ; i++) {
-        //QString test = codec->toUnicode(playList.media(i).canonicalUrl().fileName().toUtf8());
-        QString test = QString::fromLocal8Bit(playList.media(i).canonicalUrl().fileName().toUtf8().data());
-        qDebug()<<test.toUtf8().data();
-        QString info = test;
+        QString info = playList.media(i).canonicalUrl().fileName().toUtf8().data();
         info = info.split(".").first();
         QString author = info.split("-").first();
         QString title = info.split("-").last();
+
+        QByteArray ba = author.toLatin1();
+        char* mm = ba.data();
+        author = codec->toUnicode(mm);
+        ba = title.toLatin1();
+        mm = ba.data();
+        title = codec->toUnicode(mm);
+
         tableList->insertRow(tableList->rowCount());
         tableList->setItem(tableList->rowCount()-1,
                            0,new QTableWidgetItem(title));
