@@ -11,6 +11,10 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
+/*#include <QWinThumbnailToolBar>
+#include <QWinThumbnailToolButton>
+#include <QWinTaskbarButton>
+#include <QWinTaskbarProgress>*/
 
 namespace Ui {
 class myMusicPlayer;
@@ -59,6 +63,16 @@ private:
     QPushButton *btnStart;
     QMediaPlayer mediaPlayer;//音乐播放
     QMediaPlaylist playList;//音乐播放列表
+/*    void createTaskbar();//任务栏图标，参考自QT示例教程
+    void createThumbnailToolBar();//Thumbnail Toolbar 参考自QT示例程序
+    //The Windows Thumbnail Toolbar is used for providing basic music playback controls. These controls can be used to control the application without having to activate the application.
+    QWinTaskbarButton* taskbarButton;
+    QWinTaskbarProgress* taskbarProgress;
+    QWinThumbnailToolBar* thumbnailToolBar;
+    QWinThumbnailToolButton *playToolButton;
+    QWinThumbnailToolButton *forwardToolButton;
+    QWinThumbnailToolButton *backwardToolButton;*/
+
 
 private slots:
     void loadFromFile();
@@ -66,7 +80,7 @@ private slots:
     void doubleClickToPlay();
     void playerPause();
     void playerStart();
-    void playerNext();
+    void playerBackward();
     void playerForward();
     void initPosition();//初始化进度条
     void resetPosition();//重新设置进度条
@@ -78,6 +92,11 @@ private slots:
     void setPlaybackModeRandom();
     void setPlaybackModeCurrentLoop();
     void setPlaybackModeSequential();
+
+    void getLrc(int z);//获取歌词
+
+/*    void updateThumbnailToolBar();//参考自QT示例程序
+    void updateTaskbar();*/
 };
 
 #endif // MYMUSICPLAYER_H
