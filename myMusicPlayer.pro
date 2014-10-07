@@ -18,14 +18,16 @@ mainwindow.cpp \
     login/login.cpp \
     musicplayer.cpp \
     volumebutton.cpp \
-    mymusicplayer.cpp
+    mymusicplayer.cpp \
+    lyric.cpp
 
 HEADERS  += mainwindow.h \
     about.h \
     login/login.h \
     musicplayer.h \
     volumebutton.h \
-    mymusicplayer.h
+    mymusicplayer.h \
+    lyric.h
 
 FORMS    += mainwindow.ui \
     about.ui \
