@@ -13,28 +13,24 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-mainwindow.cpp \
     about.cpp \
     login/login.cpp \
-    musicplayer.cpp \
     volumebutton.cpp \
-    mymusicplayer.cpp \
-    lrc.cpp
+    mymusicplayer.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     about.h \
     login/login.h \
-    musicplayer.h \
     volumebutton.h \
-    mymusicplayer.h \
-    lrc.h
+    mymusicplayer.h
 
-FORMS    += mainwindow.ui \
+FORMS    += \
     about.ui \
     login/login.ui \
     mymusicplayer.ui
 
-OTHER_FILES +=
+OTHER_FILES += \
+    resources/lrc/Selena Gomez-Love You Like a Love Song.lrc
 
 RESOURCES += \
     musicplayer.qrc

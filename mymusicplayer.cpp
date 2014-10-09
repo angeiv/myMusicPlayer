@@ -6,12 +6,9 @@
 #include <QDebug>
 #include <string>
 #include <QTextCodec>
-#include <lrc.h>
 
 myMusicPlayer::myMusicPlayer(QWidget *parent) :
-    QWidget(parent),/*taskbarButton(0), taskbarProgress(0), thumbnailToolBar(0),
-    playToolButton(0), forwardToolButton(0), backwardToolButton(0),
-    mediaPlayer(0),*/
+    QWidget(parent),
     ui(new Ui::myMusicPlayer)
 {
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
@@ -123,50 +120,6 @@ void myMusicPlayer::loginWindow()
     l->show();
 
 }
-
-/*void myMusicPlayer::createTaskbar()
-{
-    taskbarButton = new QWinTaskbarButton(this);
-    taskbarButton->setWindow(windowHandle());
-
-    taskbarProgress = taskbarButton->progress();
-    connect(progressBar, SIGNAL(valueChanged(int)), taskbarProgress, SLOT(setValue(int)));
-    connect(progressBar, SIGNAL(rangeChanged(int,int)), taskbarProgress, SLOT(setRange(int,int)));
-
-    connect(&mediaPlayer, SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(updateTaskbar()));
-}
-
-void myMusicPlayer::createThumbnailToolBar()
-{
-    thumbnailToolBar = new QWinThumbnailToolBar(this);
-    thumbnailToolBar->setWindow(windowHandle());
-
-    playToolButton = new QWinThumbnailToolButton(thumbnailToolBar);
-    playToolButton->setEnabled(false);
-    playToolButton->setToolTip(tr("Play"));
-    playToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-    connect(playToolButton, SIGNAL(clicked()), this, SLOT(playerStart()));
-
-    forwardToolButton = new QWinThumbnailToolButton(thumbnailToolBar);
-    forwardToolButton->setEnabled(false);
-    forwardToolButton->setToolTip(tr("Fast forward"));
-    forwardToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
-    connect(forwardToolButton, SIGNAL(clicked()), this, SLOT(playerForward()));
-
-    backwardToolButton = new QWinThumbnailToolButton(thumbnailToolBar);
-    backwardToolButton->setEnabled(false);
-    backwardToolButton->setToolTip(tr("Rewind"));
-    backwardToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
-    connect(backwardToolButton, SIGNAL(clicked()), this, SLOT(playerBackward()));
-
-    thumbnailToolBar->addButton(backwardToolButton);
-    thumbnailToolBar->addButton(playToolButton);
-    thumbnailToolBar->addButton(forwardToolButton);
-
-    connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updateThumbnailToolBar()));
-    connect(&mediaPlayer, SIGNAL(durationChanged(qint64)), this, SLOT(updateThumbnailToolBar()));
-    connect(&mediaPlayer, SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(updateThumbnailToolBar()));
-}*/
 
 void myMusicPlayer::doubleClickToPlay()
 {
@@ -312,63 +265,16 @@ void myMusicPlayer::getLrc(int z)
 {
     QString title=this->tableList->item(z,0)->text();
     QString author = this->tableList->item(z,1)->text();
-    QFile file(":/resources/lrc/"+title+"-"+author+".lrc");
-    QString filename = QString(":/resources/lrc"+title+"-"+author+".lrc");
-    lrc->addLrcFile(filename);
-    lrc->showLrc();
-    if(!file.open(QIODevice::ReadOnly|QIODevice::Text))
-    {
-        lrc->setText(tr("当前目录下未找到歌词文件"));
-    }
-    else
-    {
-        QTextStream in(&file);
-        QString result=in.readAll();
-        lrc->setText(result);
-        lrc->show();
-    }
-}
-/*
-void myMusicPlayer::updateThumbnailToolBar()
-{
-    playToolButton->setEnabled(mediaPlayer.duration() > 0);
-    backwardToolButton->setEnabled(mediaPlayer.position() > 0);
-    forwardToolButton->setEnabled(mediaPlayer.position() < mediaPlayer.duration());
-
-    if (mediaPlayer.state() == QMediaPlayer::PlayingState) {
-        playToolButton->setToolTip(tr("Pause"));
-        playToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-    } else {
-        playToolButton->setToolTip(tr("Play"));
-        playToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-    }
+    QString filename = QString(title+"-"+author+".lrc");
+    addLrcFile(filename);
+    showLrc();
 }
 
-void myMusicPlayer::updateTaskbar()
-{
-    switch (mediaPlayer.state()) {
-    case QMediaPlayer::PlayingState:
-        taskbarButton->setOverlayIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-        taskbarProgress->show();
-        taskbarProgress->resume();
-        break;
-    case QMediaPlayer::PausedState:
-        taskbarButton->setOverlayIcon(style()->standardIcon(QStyle::SP_MediaPause));
-        taskbarProgress->show();
-        taskbarProgress->pause();
-        break;
-    case QMediaPlayer::StoppedState:
-        taskbarButton->setOverlayIcon(style()->standardIcon(QStyle::SP_MediaStop));
-        taskbarProgress->hide();
-        break;
-    }
-}
-*/
 void myMusicPlayer::loadFromFile()
 {
     QTextCodec *codec=QTextCodec::codecForName("UTF-8");
 
-    playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
+    playList.load(QUrl::fromLocalFile(":/resources/list/plist.m3u"),"m3u");
     mediaPlayer.setPlaylist(&playList);
     int count = playList.mediaCount();
     for(int i = 0; i < count ; i++) {
@@ -394,12 +300,81 @@ void myMusicPlayer::loadFromFile()
 
 void myMusicPlayer::saveList2File()
 {
-    if(!playList.save(QUrl::fromLocalFile("plist.m3u"),"m3u")) {
+    if(!playList.save(QUrl::fromLocalFile(":/resources/list/plist.m3u"),"m3u")) {
         //对话框提示
     }
-    //qDebug()<<playList.errorString();
 }
 
+void myMusicPlayer::addLrcFile(const QString &fn)
+{
+    filename = fn;
+    QFile f(filename);
+    if(!f.exists())
+    {
+        lrc->setText("没有发现歌词文件！");
+        hasLrc = false;
+        //timer->stop();
+    }
+    else
+    {
+        if(!f.open(QFile::ReadOnly|QFile::Text))
+        {
+            return;
+        }
+        QTextStream out(&f);
+        data = out.readAll();
+        f.close();
+        hasLrc = true;
+    }
+}
+
+void myMusicPlayer::setDuration(qint64 dura)
+{
+    duration = dura;
+}
+
+void myMusicPlayer::startLrc()
+{
+    if(hasLrc)
+    {
+        timer->start(10);
+    }
+}
+
+void myMusicPlayer::pauseLrc()
+{
+    if(hasLrc)
+    {
+        timer->stop();
+    }
+}
+
+void myMusicPlayer::showLrc()
+{qDebug()<<hasLrc;
+    if(hasLrc)
+    {
+        duration +=10;
+        QString tStr;
+        QTime currentTime(0,(duration/60000)%60,duration/1000%60,duration%1000);
+        QString format = "mm:ss.zzz";
+        tStr = currentTime.toString(format);
+        tStr.chop(1);
+        int pa = data.indexOf(tStr);
+        if(pa>0)
+        {
+            QString lrc = data.mid(pa);
+            int pb = lrc.indexOf("\n");
+            lrc = lrc.left(pb);
+            pb = lrc.lastIndexOf("]");
+            lrc = lrc.remove(0,pb+1);
+            myMusicPlayer::lrc->setText(lrc);
+        }
+    }
+    else
+    {
+        lrc->setText("没有歌词文件！");
+    }
+}
 
 void myMusicPlayer::initWindow()
 {
@@ -422,14 +397,7 @@ void myMusicPlayer::initWindow()
     actionLogin = menuLogin->addAction(tr("登陆账号..."));
     menuAbout = menu->addMenu(tr("帮助(&H)"));
     actionAbout = menuAbout->addAction(tr("关于音乐魔盒..."));
-/*
-    //设置歌词窗口
-    textEdit = new QTextEdit(this);
-    textEdit->setGeometry(QRect(0,23,521,451));
-    //textEdit->setCursor(Qt::PointingHandCursor);
-    textEdit->setReadOnly(true);
-    //stylesheet
-*/
+
     //设置播放列表
     tableList = new QTableWidget(this);
     tableList->setGeometry(QRect(320,23,260,451));
@@ -443,13 +411,6 @@ void myMusicPlayer::initWindow()
     tableList->setShowGrid(false);
     tableList->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    /*    //表格隔行变色
-    QPalette pal;
-    pal.setColor(QPalette::Base,QColor(255,0,0));
-    pal.setColor(QPalette::AlternateBase,QColor(0,255,0));
-    tableList->setPalette(pal);
-    tableList->setAlternatingRowColors(true);
-*/
     //播放列表滚动条美化
     tableList->horizontalScrollBar()->setStyleSheet("QScrollBar{background:transparent; height:10px;}"
                                                     "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
@@ -515,7 +476,4 @@ void myMusicPlayer::initWindow()
     //设置默认播放模式：列表循环
     setPlaybackModeLoop();
 
-    //设置播放快捷控制
-/*    createThumbnailToolBar();
-    createTaskbar();*/
 }
