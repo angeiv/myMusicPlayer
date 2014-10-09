@@ -266,8 +266,8 @@ void myMusicPlayer::getLrc(int z)
     QString title=this->tableList->item(z,0)->text();
     QString author = this->tableList->item(z,1)->text();
     QString filename = QString(title+"-"+author+".lrc");
-    addLrcFile(filename);
-    showLrc();
+    lrc->addLrcFile(filename);
+    //lrc->showLrc();
 }
 
 void myMusicPlayer::loadFromFile()
@@ -302,77 +302,6 @@ void myMusicPlayer::saveList2File()
 {
     if(!playList.save(QUrl::fromLocalFile(":/resources/list/plist.m3u"),"m3u")) {
         //对话框提示
-    }
-}
-
-void myMusicPlayer::addLrcFile(const QString &fn)
-{
-    filename = fn;
-    QFile f(filename);
-    if(!f.exists())
-    {
-        lrc->setText("没有发现歌词文件！");
-        hasLrc = false;
-        //timer->stop();
-    }
-    else
-    {
-        if(!f.open(QFile::ReadOnly|QFile::Text))
-        {
-            return;
-        }
-        QTextStream out(&f);
-        data = out.readAll();
-        f.close();
-        hasLrc = true;
-    }
-}
-
-void myMusicPlayer::setDuration(qint64 dura)
-{
-    duration = dura;
-}
-
-void myMusicPlayer::startLrc()
-{
-    if(hasLrc)
-    {
-        timer->start(10);
-    }
-}
-
-void myMusicPlayer::pauseLrc()
-{
-    if(hasLrc)
-    {
-        timer->stop();
-    }
-}
-
-void myMusicPlayer::showLrc()
-{qDebug()<<hasLrc;
-    if(hasLrc)
-    {
-        duration +=10;
-        QString tStr;
-        QTime currentTime(0,(duration/60000)%60,duration/1000%60,duration%1000);
-        QString format = "mm:ss.zzz";
-        tStr = currentTime.toString(format);
-        tStr.chop(1);
-        int pa = data.indexOf(tStr);
-        if(pa>0)
-        {
-            QString lrc = data.mid(pa);
-            int pb = lrc.indexOf("\n");
-            lrc = lrc.left(pb);
-            pb = lrc.lastIndexOf("]");
-            lrc = lrc.remove(0,pb+1);
-            myMusicPlayer::lrc->setText(lrc);
-        }
-    }
-    else
-    {
-        lrc->setText("没有歌词文件！");
     }
 }
 
@@ -426,7 +355,7 @@ void myMusicPlayer::initWindow()
     //设置按钮
     title = new QLabel(this);
     author = new QLabel(this);
-    lrc = new QLabel(this);
+    lrc = new Lrc(this);
 
     title->setText("欢迎使用音乐魔盒");
     author->setText("........");

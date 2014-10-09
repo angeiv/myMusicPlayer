@@ -15,14 +15,14 @@ TEMPLATE = app
 SOURCES += main.cpp\
     about.cpp \
     login/login.cpp \
-    volumebutton.cpp \
-    mymusicplayer.cpp
+    mymusicplayer.cpp \
+    lrc.cpp
 
 HEADERS  += \
     about.h \
     login/login.h \
-    volumebutton.h \
-    mymusicplayer.h
+    mymusicplayer.h \
+    lrc.h
 
 FORMS    += \
     about.ui \

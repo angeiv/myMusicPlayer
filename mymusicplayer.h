@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
+#include <lrc.h>
 
 namespace Ui {
 class myMusicPlayer;
@@ -24,10 +25,6 @@ public:
     myMusicPlayer(QWidget *parent = 0);
     void initWindow();
     ~myMusicPlayer();
-    void addLrcFile(const QString& fn);
-    void setDuration(qint64 dura);
-    void startLrc();
-    void pauseLrc();
 
 public slots:
     void openFile();
@@ -66,12 +63,7 @@ private:
     QMediaPlayer mediaPlayer;//音乐播放
     QMediaPlaylist playList;//音乐播放列表
 
-    QString filename;
-    QString data;
-    QTimer *timer;
-    qint64 duration;
-    bool hasLrc;
-    QLabel *lrc;//歌词
+    Lrc *lrc;//歌词
 
 private slots:
     void loadFromFile();
@@ -94,7 +86,6 @@ private slots:
 
     void getLrc(int z);//获取歌词
 
-    void showLrc();
 
 };
 
