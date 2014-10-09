@@ -47,7 +47,9 @@ private:
     QAction *actionLogin;
     QMenu *menuAbout;//关于
     QAction *actionAbout;//关于音乐魔盒
-    QTextEdit *textEdit;//歌词区
+    QLabel *title;//歌曲名
+    QLabel *author;//歌手
+    QLabel *lrc;//歌词
     QTableWidget *tableList;//歌曲列表
     QPushButton *btnForward;//上一曲
     QPushButton *btnPlayPause;//播放暂停

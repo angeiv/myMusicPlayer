@@ -19,7 +19,7 @@ mainwindow.cpp \
     musicplayer.cpp \
     volumebutton.cpp \
     mymusicplayer.cpp \
-    lyric.cpp
+    lrc.cpp
 
 HEADERS  += mainwindow.h \
     about.h \
@@ -27,7 +27,7 @@ HEADERS  += mainwindow.h \
     musicplayer.h \
     volumebutton.h \
     mymusicplayer.h \
-    lyric.h
+    lrc.h
 
 FORMS    += mainwindow.ui \
     about.ui \

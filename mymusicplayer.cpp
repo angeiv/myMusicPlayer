@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <string>
 #include <QTextCodec>
+#include <lrc.h>
 
 myMusicPlayer::myMusicPlayer(QWidget *parent) :
     QWidget(parent),/*taskbarButton(0), taskbarProgress(0), thumbnailToolBar(0),
@@ -34,7 +35,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(actionLogin,SIGNAL(triggered()),this,SLOT(loginWindow()));
 
-    //connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));//播放进度显示
+    connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));//播放进度显示
 
     //载入播放列表
     loadFromFile();
@@ -169,7 +170,7 @@ void myMusicPlayer::createThumbnailToolBar()
 
 void myMusicPlayer::doubleClickToPlay()
 {
-    textEdit->clear();
+
     int rowl = tableList->currentItem()->row();
 
     playList.setCurrentIndex(rowl);
@@ -179,7 +180,13 @@ void myMusicPlayer::doubleClickToPlay()
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00/00:00"));
 
+    QString str = tableList->item(rowl,0)->text();
+    title->setText(str);
+    str = tableList->item(rowl,1)->text();
+    author->setText(str);
+
     getLrc(rowl);
+
 }
 
 void myMusicPlayer::playerPause()
@@ -250,10 +257,10 @@ void myMusicPlayer::initPosition()
     progressBar = new QSlider(this);
     progressBar->setOrientation(Qt::Horizontal);
     connect(progressBar,SIGNAL(valueChanged(int)),this,SLOT(setPosition(int)));
-    progressBar->setGeometry(210,500,400,20);
+    progressBar->setGeometry(40,340,250,20);
 
     timeProgress = new QLabel(tr("00:00/00:00"), this);
-    timeProgress->setGeometry(545,515,80,20);
+    timeProgress->setGeometry(220,355,85,20);
 }
 
 void myMusicPlayer::resetPosition()
@@ -303,18 +310,22 @@ void myMusicPlayer::setPlaybackModeSequential()
 
 void myMusicPlayer::getLrc(int z)
 {
-    QString str=this->tableList->item(z,0)->text();
-    QFile file("./"+str+".lrc");
+    QString title=this->tableList->item(z,0)->text();
+    QString author = this->tableList->item(z,1)->text();
+    QFile file(":/resources/lrc/"+title+"-"+author+".lrc");
+    QString filename = QString(":/resources/lrc"+title+"-"+author+".lrc");
+    lrc->addLrcFile(filename);
+    lrc->showLrc();
     if(!file.open(QIODevice::ReadOnly|QIODevice::Text))
     {
-        textEdit->setText(tr("当前目录下未找到歌词文件"));
+        lrc->setText(tr("当前目录下未找到歌词文件"));
     }
     else
     {
         QTextStream in(&file);
         QString result=in.readAll();
-        textEdit->setText(result);
-        textEdit->show();
+        lrc->setText(result);
+        lrc->show();
     }
 }
 /*
@@ -395,9 +406,9 @@ void myMusicPlayer::initWindow()
     //设置窗口标题、图标和大小
     this->setWindowTitle("音乐魔盒");
     this->setWindowIcon(QIcon(":/resources/img/logo.ico"));
-    this->setGeometry(QRect(0,0,780,550));
-    this->setMaximumSize(780,550);
-    this->setMinimumSize(780,550);
+    this->setGeometry(QRect(0,0,555,474));
+    this->setMaximumSize(555,474);
+    this->setMinimumSize(555,474);
 
     //新建菜单栏
     menu = new QMenuBar(this);
@@ -411,17 +422,17 @@ void myMusicPlayer::initWindow()
     actionLogin = menuLogin->addAction(tr("登陆账号..."));
     menuAbout = menu->addMenu(tr("帮助(&H)"));
     actionAbout = menuAbout->addAction(tr("关于音乐魔盒..."));
-
+/*
     //设置歌词窗口
     textEdit = new QTextEdit(this);
     textEdit->setGeometry(QRect(0,23,521,451));
     //textEdit->setCursor(Qt::PointingHandCursor);
     textEdit->setReadOnly(true);
     //stylesheet
-
+*/
     //设置播放列表
     tableList = new QTableWidget(this);
-    tableList->setGeometry(QRect(520,23,260,451));
+    tableList->setGeometry(QRect(320,23,260,451));
     tableList->setColumnCount(2);
     tableList->setColumnWidth(0,150);
     tableList->setRowCount(0);
@@ -452,6 +463,22 @@ void myMusicPlayer::initWindow()
                                                   "QScrollBar::add-line{background:transparent;}");
 
     //设置按钮
+    title = new QLabel(this);
+    author = new QLabel(this);
+    lrc = new QLabel(this);
+
+    title->setText("欢迎使用音乐魔盒");
+    author->setText("........");
+    lrc->setText(".........");
+
+    title->setGeometry(70,42,168,32);
+    author->setGeometry(70,74,168,32);
+    lrc->setGeometry(70,160,168,32);
+
+    title->setAlignment(Qt::AlignCenter);
+    author->setAlignment(Qt::AlignCenter);
+    lrc->setAlignment(Qt::AlignCenter);
+
     btnBackword = new QPushButton(this);
     btnPlayPause = new QPushButton(this);
     btnForward = new QPushButton(this);
@@ -462,29 +489,28 @@ void myMusicPlayer::initWindow()
     btnForward->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
     btnStart->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 
-    btnBackword->setGeometry(40,495,32,32);
-    btnPlayPause->setGeometry(78,478,64,64);
-    btnStart->setGeometry(78,478,64,64);
-    btnForward->setGeometry(150,495,32,32);
+    btnBackword->setGeometry(62,400,32,32);
+    btnPlayPause->setGeometry(102,385,64,64);
+    btnStart->setGeometry(102,385,64,64);
+    btnForward->setGeometry(174,400,32,32);
 
     btnBackword->setCursor(Qt::PointingHandCursor);
     btnPlayPause->setCursor(Qt::PointingHandCursor);
     btnStart->setCursor(Qt::PointingHandCursor);
     btnForward->setCursor(Qt::PointingHandCursor);
-    btnStart->hide();
 
     initPosition();
 
     btnVolume = new QPushButton(this);
     btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
-    btnVolume->setGeometry(620,495,32,32);
+    btnVolume->setGeometry(220,400,32,32);
 
     addSong = new QPushButton(this);
     addSong->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-    addSong->setGeometry(521,440,32,32);
+    addSong->setGeometry(320,440,32,32);
     cutSong = new QPushButton(this);
     cutSong->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-    cutSong->setGeometry(555,440,32,32);
+    cutSong->setGeometry(355,440,32,32);
 
     //设置默认播放模式：列表循环
     setPlaybackModeLoop();

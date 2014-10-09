@@ -43,6 +43,7 @@
 
 #include <QWidget>
 #include <QMediaPlayer>
+#include <lrc.h>
 
 class VolumeButton;
 
