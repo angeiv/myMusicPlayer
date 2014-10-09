@@ -274,7 +274,7 @@ void myMusicPlayer::loadFromFile()
 {
     QTextCodec *codec=QTextCodec::codecForName("UTF-8");
 
-    playList.load(QUrl::fromLocalFile(":/resources/list/plist.m3u"),"m3u");
+    playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
     mediaPlayer.setPlaylist(&playList);
     int count = playList.mediaCount();
     for(int i = 0; i < count ; i++) {
@@ -300,8 +300,8 @@ void myMusicPlayer::loadFromFile()
 
 void myMusicPlayer::saveList2File()
 {
-    if(!playList.save(QUrl::fromLocalFile(":/resources/list/plist.m3u"),"m3u")) {
-        //对话框提示
+    if(!playList.save(QUrl::fromLocalFile("plist.m3u"),"m3u")) {
+        qDebug()<<playList.errorString();//对话框提示
     }
 }
 

@@ -11,6 +11,5 @@
         <file>resources/img/double-arrows-right.png</file>
         <file>resources/img/lrc.jpg</file>
         <file>resources/img/logo.ico</file>
-        <file>resources/list/plist.m3u</file>
     </qresource>
 </RCC>

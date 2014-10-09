@@ -29,8 +29,5 @@ FORMS    += \
     login/login.ui \
     mymusicplayer.ui
 
-OTHER_FILES += \
-    resources/lrc/Selena Gomez-Love You Like a Love Song.lrc
-
 RESOURCES += \
     musicplayer.qrc

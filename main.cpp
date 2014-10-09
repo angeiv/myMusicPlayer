@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
     //加载Qt中的资源文件，使Qt显示中文（包括QMessageBox、文本框右键菜单等）
     QTranslator translator;
-    translator.load(":/resources/translations/qt_zh_CN");
+    translator.load(":/resources/translations/qt_zh_CN.qm");
     a.installTranslator(&translator);
 
 //    MainWindow w;
