@@ -32,8 +32,10 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(actionLogin,SIGNAL(triggered()),this,SLOT(loginWindow()));
 
-    connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));//播放进度显示
+    connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this,SLOT(positionChanged(qint64)));//播放进度显示
 
+    connect(&mediaPlayer,SIGNAL(durationChanged(qint64)),this,SLOT(durationChanged(qint64)));
+    connect(&mediaPlayer,SIGNAL(positionChanged(qint64)),this,SLOT(updatePosition(qint64)));
     connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
     //载入播放列表
     loadFromFile();
@@ -213,25 +215,47 @@ void myMusicPlayer::initPosition()
     connect(progressBar,SIGNAL(valueChanged(int)),this,SLOT(setPosition(int)));
     progressBar->setGeometry(40,340,250,20);
 
-    timeProgress = new QLabel(tr("00:00/00:00"), this);
-    timeProgress->setGeometry(220,355,85,20);
+    timeProgress = new QLabel(tr("00:00 / 00:00"), this);
+    timeProgress->setGeometry(210,355,85,20);
 }
 
 void myMusicPlayer::resetPosition()
 {
     progressBar->setValue(0);
-    timeProgress->setText(tr("00:00/00:00"));
+    timeProgress->setText(tr("00:00 / 00:00"));
 }
-
-void myMusicPlayer::updatePosition(qint64 position)
+void myMusicPlayer::positionChanged(qint64 position)
 {
-    QTime durationMusic(0, mediaPlayer.duration() / 60000,(mediaPlayer.duration() - mediaPlayer.duration()/60000*60000)/1000+1);
-
-    progressBar->setValue(position*100/mediaPlayer.duration());
-    QTime duration(0, position / 60000, qRound((position % 60000) / 1000.0));
-    timeProgress->setText(duration.toString(tr("mm:ss")) + "/" + durationMusic.toString(tr("mm:ss")));
+    progressBar->setValue(position);
 
 }
+
+void myMusicPlayer::durationChanged(qint64 duration)
+{
+    progressBar->setRange(0,duration);
+    totalDuration = duration/1000;
+}
+void myMusicPlayer::updatePosition(qint64 currentInfo)
+{
+    QString tStr;
+
+    currentInfo /= 1000;
+
+    if (currentInfo || totalDuration)
+    {
+        QTime currentTime((currentInfo/3600)%60, (currentInfo/60)%60, currentInfo%60, (currentInfo*1000)%1000);
+
+        QTime totalTime((totalDuration/3600)%60, (totalDuration/60)%60, totalDuration%60, (totalDuration*1000)%1000);
+        QString format = "mm:ss";
+        if (totalDuration > 3600)
+            format = "hh:mm:ss";
+
+        tStr = currentTime.toString(format) + " / " + totalTime.toString(format);
+    }
+    timeProgress->setText(tStr);
+
+}
+
 
 void myMusicPlayer::setPosition(int position)
 {

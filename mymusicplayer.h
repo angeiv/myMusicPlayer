@@ -62,7 +62,7 @@ private:
     QPushButton *btnStart;
     QMediaPlayer mediaPlayer;//音乐播放
     QMediaPlaylist playList;//音乐播放列表
-
+    qint64 totalDuration;
     Lrc *lrc;//歌词
 
     bool playerMuted = 0;//是否无声
@@ -77,7 +77,7 @@ private slots:
     void playerForward();
     void initPosition();//初始化进度条
     void resetPosition();//重新设置进度条
-    void updatePosition(qint64 position);//进度条和播放位置显示
+    void updatePosition(qint64 currentInfo);//进度条和播放位置显示
     void setPosition(int position);
 
     //四种播放模式：列表循环，随机播放，单曲循环，顺序播放
@@ -85,6 +85,9 @@ private slots:
     void setPlaybackModeRandom();
     void setPlaybackModeCurrentLoop();
     void setPlaybackModeSequential();
+    void positionChanged(qint64 position);
+    void durationChanged(qint64 duration);
+
 
     void getLrc(int z);//获取歌词
 
