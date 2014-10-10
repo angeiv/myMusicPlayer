@@ -65,6 +65,8 @@ private:
 
     Lrc *lrc;//歌词
 
+    bool playerMuted = 0;//是否无声
+
 private slots:
     void loadFromFile();
     void saveList2File();
@@ -86,6 +88,7 @@ private slots:
 
     void getLrc(int z);//获取歌词
 
+    void setMuted();
 
 };
 

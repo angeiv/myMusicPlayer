@@ -34,6 +34,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));//播放进度显示
 
+    connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
     //载入播放列表
     loadFromFile();
     playList.setPlaybackMode(QMediaPlaylist::Sequential);
@@ -268,6 +269,19 @@ void myMusicPlayer::getLrc(int z)
     QString filename = QString(title+"-"+author+".lrc");
     lrc->addLrcFile(filename);
     //lrc->showLrc();
+}
+
+void myMusicPlayer::setMuted()
+{
+    playerMuted = !playerMuted;
+    mediaPlayer.setMuted(playerMuted);
+
+    if(playerMuted) {
+        btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
+    }
+    else {
+        btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+    }
 }
 
 void myMusicPlayer::loadFromFile()
