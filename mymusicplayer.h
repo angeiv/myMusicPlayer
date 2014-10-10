@@ -59,12 +59,12 @@ private:
     QPushButton *btnVolumeControl;
     QPushButton *addSong;//添加歌曲
     QPushButton *cutSong;//删除歌曲
-    QPushButton *btnStart;
     QMediaPlayer mediaPlayer;//音乐播放
     QMediaPlaylist playList;//音乐播放列表
     qint64 totalDuration;
     Lrc *lrc;//歌词
 
+    bool play;//是否可以播放
     bool playerMuted;//是否无声
 
 private slots:
@@ -72,26 +72,24 @@ private slots:
     void saveList2File();
     void doubleClickToPlay();
     void playerPause();
-    void playerStart();
     void playerBackward();
     void playerForward();
     void initPosition();//初始化进度条
     void resetPosition();//重新设置进度条
     void updatePosition(qint64 currentInfo);//进度条和播放位置显示
     void setPosition(int position);
-
+    void positionChanged(qint64 position);
+    void durationChanged(qint64 duration);
     //四种播放模式：列表循环，随机播放，单曲循环，顺序播放
     void setPlaybackModeLoop();
     void setPlaybackModeRandom();
     void setPlaybackModeCurrentLoop();
     void setPlaybackModeSequential();
-    void positionChanged(qint64 position);
-    void durationChanged(qint64 duration);
-
 
     void getLrc(int z);//获取歌词
 
-    void setMuted();
+    void setMuted();//设置静音
+    void mediaStateChanged(QMediaPlayer::State state);
 
 };
 
