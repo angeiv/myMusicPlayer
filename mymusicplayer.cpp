@@ -134,7 +134,7 @@ void myMusicPlayer::doubleClickToPlay()
     mediaPlayer.play();
 
     progressBar->setValue(0);
-    timeProgress->setText(tr("00:00/00:00"));
+    timeProgress->setText(tr("00:00 / 00:00"));
 
     QString str = tableList->item(rowl,0)->text();
     title->setText(str);
@@ -167,7 +167,7 @@ void myMusicPlayer::playerBackward()
     playList.setCurrentIndex(rowl);
 
     progressBar->setValue(0);
-    timeProgress->setText(tr("00:00/00:00"));
+    timeProgress->setText(tr("00:00 / 00:00"));
 
     if(rowl<row2-1)
     {
@@ -443,4 +443,5 @@ void myMusicPlayer::initWindow()
     //设置默认播放模式：列表循环
     setPlaybackModeLoop();
 
+    playerMuted  = false;
 }

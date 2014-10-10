@@ -65,7 +65,7 @@ private:
     qint64 totalDuration;
     Lrc *lrc;//歌词
 
-    bool playerMuted = 0;//是否无声
+    bool playerMuted;//是否无声
 
 private slots:
     void loadFromFile();
