@@ -8,9 +8,7 @@
 #include <QTextCodec>
 
 myMusicPlayer::myMusicPlayer(QWidget *parent) :
-    QWidget(parent),/*taskbarButton(0), taskbarProgress(0), thumbnailToolBar(0),
-    playToolButton(0), forwardToolButton(0), backwardToolButton(0),
-    mediaPlayer(0),*/
+    QWidget(parent),
     ui(new Ui::myMusicPlayer)
 {
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
@@ -34,8 +32,11 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
 
     connect(actionLogin,SIGNAL(triggered()),this,SLOT(loginWindow()));
 
-    //connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));//播放进度显示
+    connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this,SLOT(positionChanged(qint64)));//播放进度显示
 
+    connect(&mediaPlayer,SIGNAL(durationChanged(qint64)),this,SLOT(durationChanged(qint64)));
+    connect(&mediaPlayer,SIGNAL(positionChanged(qint64)),this,SLOT(updatePosition(qint64)));
+    connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
     //载入播放列表
     loadFromFile();
     playList.setPlaybackMode(QMediaPlaylist::Sequential);
@@ -123,53 +124,9 @@ void myMusicPlayer::loginWindow()
 
 }
 
-/*void myMusicPlayer::createTaskbar()
-{
-    taskbarButton = new QWinTaskbarButton(this);
-    taskbarButton->setWindow(windowHandle());
-
-    taskbarProgress = taskbarButton->progress();
-    connect(progressBar, SIGNAL(valueChanged(int)), taskbarProgress, SLOT(setValue(int)));
-    connect(progressBar, SIGNAL(rangeChanged(int,int)), taskbarProgress, SLOT(setRange(int,int)));
-
-    connect(&mediaPlayer, SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(updateTaskbar()));
-}
-
-void myMusicPlayer::createThumbnailToolBar()
-{
-    thumbnailToolBar = new QWinThumbnailToolBar(this);
-    thumbnailToolBar->setWindow(windowHandle());
-
-    playToolButton = new QWinThumbnailToolButton(thumbnailToolBar);
-    playToolButton->setEnabled(false);
-    playToolButton->setToolTip(tr("Play"));
-    playToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-    connect(playToolButton, SIGNAL(clicked()), this, SLOT(playerStart()));
-
-    forwardToolButton = new QWinThumbnailToolButton(thumbnailToolBar);
-    forwardToolButton->setEnabled(false);
-    forwardToolButton->setToolTip(tr("Fast forward"));
-    forwardToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
-    connect(forwardToolButton, SIGNAL(clicked()), this, SLOT(playerForward()));
-
-    backwardToolButton = new QWinThumbnailToolButton(thumbnailToolBar);
-    backwardToolButton->setEnabled(false);
-    backwardToolButton->setToolTip(tr("Rewind"));
-    backwardToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
-    connect(backwardToolButton, SIGNAL(clicked()), this, SLOT(playerBackward()));
-
-    thumbnailToolBar->addButton(backwardToolButton);
-    thumbnailToolBar->addButton(playToolButton);
-    thumbnailToolBar->addButton(forwardToolButton);
-
-    connect(&mediaPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updateThumbnailToolBar()));
-    connect(&mediaPlayer, SIGNAL(durationChanged(qint64)), this, SLOT(updateThumbnailToolBar()));
-    connect(&mediaPlayer, SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(updateThumbnailToolBar()));
-}*/
-
 void myMusicPlayer::doubleClickToPlay()
 {
-    textEdit->clear();
+
     int rowl = tableList->currentItem()->row();
 
     playList.setCurrentIndex(rowl);
@@ -179,7 +136,13 @@ void myMusicPlayer::doubleClickToPlay()
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00/00:00"));
 
+    QString str = tableList->item(rowl,0)->text();
+    title->setText(str);
+    str = tableList->item(rowl,1)->text();
+    author->setText(str);
+
     getLrc(rowl);
+
 }
 
 void myMusicPlayer::playerPause()
@@ -250,27 +213,49 @@ void myMusicPlayer::initPosition()
     progressBar = new QSlider(this);
     progressBar->setOrientation(Qt::Horizontal);
     connect(progressBar,SIGNAL(valueChanged(int)),this,SLOT(setPosition(int)));
-    progressBar->setGeometry(210,500,400,20);
+    progressBar->setGeometry(40,340,250,20);
 
-    timeProgress = new QLabel(tr("00:00/00:00"), this);
-    timeProgress->setGeometry(545,515,80,20);
+    timeProgress = new QLabel(tr("00:00 / 00:00"), this);
+    timeProgress->setGeometry(210,355,85,20);
 }
 
 void myMusicPlayer::resetPosition()
 {
     progressBar->setValue(0);
-    timeProgress->setText(tr("00:00/00:00"));
+    timeProgress->setText(tr("00:00 / 00:00"));
 }
-
-void myMusicPlayer::updatePosition(qint64 position)
+void myMusicPlayer::positionChanged(qint64 position)
 {
-    QTime durationMusic(0, mediaPlayer.duration() / 60000,(mediaPlayer.duration() - mediaPlayer.duration()/60000*60000)/1000+1);
-
-    progressBar->setValue(position*100/mediaPlayer.duration());
-    QTime duration(0, position / 60000, qRound((position % 60000) / 1000.0));
-    timeProgress->setText(duration.toString(tr("mm:ss")) + "/" + durationMusic.toString(tr("mm:ss")));
+    progressBar->setValue(position);
 
 }
+
+void myMusicPlayer::durationChanged(qint64 duration)
+{
+    progressBar->setRange(0,duration);
+    totalDuration = duration/1000;
+}
+void myMusicPlayer::updatePosition(qint64 currentInfo)
+{
+    QString tStr;
+
+    currentInfo /= 1000;
+
+    if (currentInfo || totalDuration)
+    {
+        QTime currentTime((currentInfo/3600)%60, (currentInfo/60)%60, currentInfo%60, (currentInfo*1000)%1000);
+
+        QTime totalTime((totalDuration/3600)%60, (totalDuration/60)%60, totalDuration%60, (totalDuration*1000)%1000);
+        QString format = "mm:ss";
+        if (totalDuration > 3600)
+            format = "hh:mm:ss";
+
+        tStr = currentTime.toString(format) + " / " + totalTime.toString(format);
+    }
+    timeProgress->setText(tStr);
+
+}
+
 
 void myMusicPlayer::setPosition(int position)
 {
@@ -303,56 +288,26 @@ void myMusicPlayer::setPlaybackModeSequential()
 
 void myMusicPlayer::getLrc(int z)
 {
-    QString str=this->tableList->item(z,0)->text();
-    QFile file("./"+str+".lrc");
-    if(!file.open(QIODevice::ReadOnly|QIODevice::Text))
-    {
-        textEdit->setText(tr("当前目录下未找到歌词文件"));
-    }
-    else
-    {
-        QTextStream in(&file);
-        QString result=in.readAll();
-        textEdit->setText(result);
-        textEdit->show();
-    }
+    QString title=this->tableList->item(z,0)->text();
+    QString author = this->tableList->item(z,1)->text();
+    QString filename = QString(title+"-"+author+".lrc");
+    lrc->addLrcFile(filename);
+    //lrc->showLrc();
 }
-/*
-void myMusicPlayer::updateThumbnailToolBar()
-{
-    playToolButton->setEnabled(mediaPlayer.duration() > 0);
-    backwardToolButton->setEnabled(mediaPlayer.position() > 0);
-    forwardToolButton->setEnabled(mediaPlayer.position() < mediaPlayer.duration());
 
-    if (mediaPlayer.state() == QMediaPlayer::PlayingState) {
-        playToolButton->setToolTip(tr("Pause"));
-        playToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-    } else {
-        playToolButton->setToolTip(tr("Play"));
-        playToolButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+void myMusicPlayer::setMuted()
+{
+    playerMuted = !playerMuted;
+    mediaPlayer.setMuted(playerMuted);
+
+    if(playerMuted) {
+        btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
+    }
+    else {
+        btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
     }
 }
 
-void myMusicPlayer::updateTaskbar()
-{
-    switch (mediaPlayer.state()) {
-    case QMediaPlayer::PlayingState:
-        taskbarButton->setOverlayIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-        taskbarProgress->show();
-        taskbarProgress->resume();
-        break;
-    case QMediaPlayer::PausedState:
-        taskbarButton->setOverlayIcon(style()->standardIcon(QStyle::SP_MediaPause));
-        taskbarProgress->show();
-        taskbarProgress->pause();
-        break;
-    case QMediaPlayer::StoppedState:
-        taskbarButton->setOverlayIcon(style()->standardIcon(QStyle::SP_MediaStop));
-        taskbarProgress->hide();
-        break;
-    }
-}
-*/
 void myMusicPlayer::loadFromFile()
 {
     QTextCodec *codec=QTextCodec::codecForName("UTF-8");
@@ -384,20 +339,18 @@ void myMusicPlayer::loadFromFile()
 void myMusicPlayer::saveList2File()
 {
     if(!playList.save(QUrl::fromLocalFile("plist.m3u"),"m3u")) {
-        //对话框提示
+        qDebug()<<playList.errorString();//对话框提示
     }
-    //qDebug()<<playList.errorString();
 }
-
 
 void myMusicPlayer::initWindow()
 {
     //设置窗口标题、图标和大小
     this->setWindowTitle("音乐魔盒");
     this->setWindowIcon(QIcon(":/resources/img/logo.ico"));
-    this->setGeometry(QRect(0,0,780,550));
-    this->setMaximumSize(780,550);
-    this->setMinimumSize(780,550);
+    this->setGeometry(QRect(0,0,555,474));
+    this->setMaximumSize(555,474);
+    this->setMinimumSize(555,474);
 
     //新建菜单栏
     menu = new QMenuBar(this);
@@ -412,16 +365,9 @@ void myMusicPlayer::initWindow()
     menuAbout = menu->addMenu(tr("帮助(&H)"));
     actionAbout = menuAbout->addAction(tr("关于音乐魔盒..."));
 
-    //设置歌词窗口
-    textEdit = new QTextEdit(this);
-    textEdit->setGeometry(QRect(0,23,521,451));
-    //textEdit->setCursor(Qt::PointingHandCursor);
-    textEdit->setReadOnly(true);
-    //stylesheet
-
     //设置播放列表
     tableList = new QTableWidget(this);
-    tableList->setGeometry(QRect(520,23,260,451));
+    tableList->setGeometry(QRect(320,23,260,451));
     tableList->setColumnCount(2);
     tableList->setColumnWidth(0,150);
     tableList->setRowCount(0);
@@ -432,13 +378,6 @@ void myMusicPlayer::initWindow()
     tableList->setShowGrid(false);
     tableList->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    /*    //表格隔行变色
-    QPalette pal;
-    pal.setColor(QPalette::Base,QColor(255,0,0));
-    pal.setColor(QPalette::AlternateBase,QColor(0,255,0));
-    tableList->setPalette(pal);
-    tableList->setAlternatingRowColors(true);
-*/
     //播放列表滚动条美化
     tableList->horizontalScrollBar()->setStyleSheet("QScrollBar{background:transparent; height:10px;}"
                                                     "QScrollBar::handle{background:lightgray; border:2px solid transparent; border-radius:5px;}"
@@ -452,6 +391,22 @@ void myMusicPlayer::initWindow()
                                                   "QScrollBar::add-line{background:transparent;}");
 
     //设置按钮
+    title = new QLabel(this);
+    author = new QLabel(this);
+    lrc = new Lrc(this);
+
+    title->setText("欢迎使用音乐魔盒");
+    author->setText("........");
+    lrc->setText(".........");
+
+    title->setGeometry(70,42,168,32);
+    author->setGeometry(70,74,168,32);
+    lrc->setGeometry(70,160,168,32);
+
+    title->setAlignment(Qt::AlignCenter);
+    author->setAlignment(Qt::AlignCenter);
+    lrc->setAlignment(Qt::AlignCenter);
+
     btnBackword = new QPushButton(this);
     btnPlayPause = new QPushButton(this);
     btnForward = new QPushButton(this);
@@ -462,34 +417,30 @@ void myMusicPlayer::initWindow()
     btnForward->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
     btnStart->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 
-    btnBackword->setGeometry(40,495,32,32);
-    btnPlayPause->setGeometry(78,478,64,64);
-    btnStart->setGeometry(78,478,64,64);
-    btnForward->setGeometry(150,495,32,32);
+    btnBackword->setGeometry(62,400,32,32);
+    btnPlayPause->setGeometry(102,385,64,64);
+    btnStart->setGeometry(102,385,64,64);
+    btnForward->setGeometry(174,400,32,32);
 
     btnBackword->setCursor(Qt::PointingHandCursor);
     btnPlayPause->setCursor(Qt::PointingHandCursor);
     btnStart->setCursor(Qt::PointingHandCursor);
     btnForward->setCursor(Qt::PointingHandCursor);
-    btnStart->hide();
 
     initPosition();
 
     btnVolume = new QPushButton(this);
     btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
-    btnVolume->setGeometry(620,495,32,32);
+    btnVolume->setGeometry(220,400,32,32);
 
     addSong = new QPushButton(this);
     addSong->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-    addSong->setGeometry(521,440,32,32);
+    addSong->setGeometry(320,440,32,32);
     cutSong = new QPushButton(this);
     cutSong->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-    cutSong->setGeometry(555,440,32,32);
+    cutSong->setGeometry(355,440,32,32);
 
     //设置默认播放模式：列表循环
     setPlaybackModeLoop();
 
-    //设置播放快捷控制
-/*    createThumbnailToolBar();
-    createTaskbar();*/
 }

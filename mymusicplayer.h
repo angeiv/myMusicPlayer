@@ -11,10 +11,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
-/*#include <QWinThumbnailToolBar>
-#include <QWinThumbnailToolButton>
-#include <QWinTaskbarButton>
-#include <QWinTaskbarProgress>*/
+#include <lrc.h>
 
 namespace Ui {
 class myMusicPlayer;
@@ -47,7 +44,9 @@ private:
     QAction *actionLogin;
     QMenu *menuAbout;//关于
     QAction *actionAbout;//关于音乐魔盒
-    QTextEdit *textEdit;//歌词区
+    QLabel *title;//歌曲名
+    QLabel *author;//歌手
+
     QTableWidget *tableList;//歌曲列表
     QPushButton *btnForward;//上一曲
     QPushButton *btnPlayPause;//播放暂停
@@ -63,16 +62,10 @@ private:
     QPushButton *btnStart;
     QMediaPlayer mediaPlayer;//音乐播放
     QMediaPlaylist playList;//音乐播放列表
-/*    void createTaskbar();//任务栏图标，参考自QT示例教程
-    void createThumbnailToolBar();//Thumbnail Toolbar 参考自QT示例程序
-    //The Windows Thumbnail Toolbar is used for providing basic music playback controls. These controls can be used to control the application without having to activate the application.
-    QWinTaskbarButton* taskbarButton;
-    QWinTaskbarProgress* taskbarProgress;
-    QWinThumbnailToolBar* thumbnailToolBar;
-    QWinThumbnailToolButton *playToolButton;
-    QWinThumbnailToolButton *forwardToolButton;
-    QWinThumbnailToolButton *backwardToolButton;*/
+    qint64 totalDuration;
+    Lrc *lrc;//歌词
 
+    bool playerMuted = 0;//是否无声
 
 private slots:
     void loadFromFile();
@@ -84,7 +77,7 @@ private slots:
     void playerForward();
     void initPosition();//初始化进度条
     void resetPosition();//重新设置进度条
-    void updatePosition(qint64 position);//进度条和播放位置显示
+    void updatePosition(qint64 currentInfo);//进度条和播放位置显示
     void setPosition(int position);
 
     //四种播放模式：列表循环，随机播放，单曲循环，顺序播放
@@ -92,11 +85,14 @@ private slots:
     void setPlaybackModeRandom();
     void setPlaybackModeCurrentLoop();
     void setPlaybackModeSequential();
+    void positionChanged(qint64 position);
+    void durationChanged(qint64 duration);
+
 
     void getLrc(int z);//获取歌词
 
-/*    void updateThumbnailToolBar();//参考自QT示例程序
-    void updateTaskbar();*/
+    void setMuted();
+
 };
 
 #endif // MYMUSICPLAYER_H
