@@ -1,4 +1,4 @@
-#ifndef MYMUSICPLAYER_H
+﻿#ifndef MYMUSICPLAYER_H
 #define MYMUSICPLAYER_H
 
 #include <QWidget>
@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
+#include <lrc.h>
 
 namespace Ui {
 class myMusicPlayer;
@@ -30,6 +31,7 @@ public slots:
     void aboutWindow();
     void addsong();
     void cutsong();
+    void loginWindow();
 
 private:
     Ui::myMusicPlayer *ui;
@@ -38,9 +40,13 @@ private:
     QAction *actionNew;//打开音乐
     QMenu *menuList;//列表
     QAction *actionList;//本地列表
+    QMenu *menuLogin;
+    QAction *actionLogin;
     QMenu *menuAbout;//关于
     QAction *actionAbout;//关于音乐魔盒
-    QTextEdit *textEdit;//歌词区
+    QLabel *title;//歌曲名
+    QLabel *author;//歌手
+
     QTableWidget *tableList;//歌曲列表
     QPushButton *btnForward;//上一曲
     QPushButton *btnPlayPause;//播放暂停
@@ -56,8 +62,10 @@ private:
     QPushButton *btnStart;
     QMediaPlayer mediaPlayer;//音乐播放
     QMediaPlaylist playList;//音乐播放列表
+    qint64 totalDuration;
+    Lrc *lrc;//歌词
 
-
+    bool playerMuted = 0;//是否无声
 
 private slots:
     void loadFromFile();
@@ -65,8 +73,26 @@ private slots:
     void doubleClickToPlay();
     void playerPause();
     void playerStart();
-    void playerNext();
+    void playerBackward();
     void playerForward();
+    void initPosition();//初始化进度条
+    void resetPosition();//重新设置进度条
+    void updatePosition(qint64 currentInfo);//进度条和播放位置显示
+    void setPosition(int position);
+
+    //四种播放模式：列表循环，随机播放，单曲循环，顺序播放
+    void setPlaybackModeLoop();
+    void setPlaybackModeRandom();
+    void setPlaybackModeCurrentLoop();
+    void setPlaybackModeSequential();
+    void positionChanged(qint64 position);
+    void durationChanged(qint64 duration);
+
+
+    void getLrc(int z);//获取歌词
+
+    void setMuted();
+
 };
 
 #endif // MYMUSICPLAYER_H

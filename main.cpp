@@ -1,4 +1,4 @@
-#include "mymusicplayer.h"
+﻿#include "mymusicplayer.h"
 #include <QApplication>
 #include <QDesktopWidget>
 

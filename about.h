@@ -16,7 +16,7 @@ public:
     ~About();
 
 private slots:
-    void on_labelPage_linkActivated(const QString &link);
+    void on_labelPage_linkActivated(const QString);
 
     void openUrl(QString url);
 

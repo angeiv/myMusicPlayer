@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/img/headphones.png</file>
-        <file>resources/translations/qt_zh_CN.qm</file>
         <file>resources/img/arrow-circle-left.png</file>
         <file>resources/img/arrow-circle-right.png</file>
         <file>resources/img/arrow-simle-right.png</file>
