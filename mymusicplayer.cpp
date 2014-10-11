@@ -39,6 +39,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(btnForward, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
     connect(btnBackword, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
     //注：stop会触发mediaStateChanged，从而next()
+    connect(&mediaPlayer,SIGNAL(stateChanged(QMediaPlayer::State)),this,SLOT(mediaStateChanged(QMediaPlayer::State)));
     //载入播放列表
     loadFromFile();
     playList.setPlaybackMode(QMediaPlaylist::Sequential);
@@ -51,6 +52,8 @@ myMusicPlayer::~myMusicPlayer()
 
 void myMusicPlayer::openFile()
 {
+    play = false;
+
     QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"),
                                                     "",  tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
 
@@ -66,17 +69,24 @@ void myMusicPlayer::openFile()
     QString title = info.split("-").first();
     QString author = info.split("-").last();
 
-    tableList->insertRow(tableList->rowCount());
-    tableList->setItem(tableList->rowCount()-1,
+    int row = tableList->rowCount();
+
+    tableList->insertRow(row);
+    tableList->setItem(row,
                        0,new QTableWidgetItem(title));
-    tableList->setItem(tableList->rowCount()-1,
+    tableList->setItem(row,
                        1,new QTableWidgetItem(author));
 
     playList.addMedia(QUrl::fromLocalFile(filePath));
-    tableList->setCurrentCell(tableList->rowCount(),0);
+    playList.setCurrentIndex(row);
+    tableList->setCurrentCell(row,0);
     saveList2File();
     mediaPlayer.play();
 
+    setLrcText(row-1);
+
+    getLrc(tableList->rowCount()-1);
+    btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 }
 
 void myMusicPlayer::aboutWindow()
@@ -96,10 +106,11 @@ void myMusicPlayer::addsong()
     info = info.split(".").first();
     QString title = info.split("-").first().toUtf8();
     QString author = info.split("-").last().toUtf8();
-    tableList->insertRow(tableList->rowCount());
-    tableList->setItem(tableList->rowCount()-1,
+    int row = tableList->rowCount();
+    tableList->insertRow(row);
+    tableList->setItem(row,
                        0,new QTableWidgetItem(title));
-    tableList->setItem(tableList->rowCount()-1,
+    tableList->setItem(row,
                        1,new QTableWidgetItem(author));
     playList.addMedia(QUrl::fromLocalFile(filePath));
 
@@ -139,10 +150,7 @@ void myMusicPlayer::doubleClickToPlay()
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00 / 00:00"));
 
-    QString str = tableList->item(rowl,0)->text();
-    title->setText(str);
-    str = tableList->item(rowl,1)->text();
-    author->setText(str);
+    setLrcText(rowl);
 
     getLrc(rowl);
     btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
@@ -166,24 +174,21 @@ void myMusicPlayer::playerBackward()
 {
     int row2 =tableList->rowCount();
     int rowl = tableList->currentItem()->row();
-    playList.setCurrentIndex(rowl);
 
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00 / 00:00"));
 
     if(rowl<row2-1)
     {
-        mediaPlayer.setMedia(playList.media(rowl+1).canonicalUrl());
-        mediaPlayer.play();
         tableList->setCurrentCell(rowl+1,0);
     }
     else
     {
-        mediaPlayer.setMedia(playList.media(0).canonicalUrl());
-        mediaPlayer.play();
         rowl = 0;
         tableList->setCurrentCell(rowl,0);
     }
+    playList.setCurrentIndex(tableList->currentRow());
+    mediaPlayer.play();
     QString str = tableList->item(rowl,0)->text();
     title->setText(str);
     str = tableList->item(rowl,1)->text();
@@ -331,6 +336,17 @@ void myMusicPlayer::mediaStateChanged(QMediaPlayer::State state)
     }
 }
 
+void myMusicPlayer::setLrcText(int row)
+{
+    QString str = tableList->item(row,0)->text();
+    title->setText(str);
+    str = tableList->item(row,1)->text();
+    author->setText(str);
+    QDate date = QDate::currentDate();
+    str = date.toString("yyyy-MM-dd");
+    lrc->setText(str);
+}
+
 void myMusicPlayer::loadFromFile()
 {
     QTextCodec *codec=QTextCodec::codecForName("UTF-8");
@@ -419,8 +435,10 @@ void myMusicPlayer::initWindow()
     lrc = new Lrc(this);
 
     title->setText("欢迎使用音乐魔盒");
-    author->setText("........");
-    lrc->setText(".........");
+    author->setText("V1.0");
+    QDate date = QDate::currentDate();
+    QString str = date.toString("yyyy-MM-dd");
+    lrc->setText(str);
 
     title->setGeometry(70,42,168,32);
     author->setGeometry(70,74,168,32);

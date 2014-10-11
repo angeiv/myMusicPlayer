@@ -11,7 +11,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
-#include <lrc.h>
+#include <lrc/lrc.h>
 
 namespace Ui {
 class myMusicPlayer;
@@ -90,6 +90,8 @@ private slots:
 
     void setMuted();//设置静音
     void mediaStateChanged(QMediaPlayer::State state);
+
+    void setLrcText(int row);
 
 };
 
