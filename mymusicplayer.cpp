@@ -38,7 +38,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
     connect(btnForward, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
     connect(btnBackword, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
-    connect(tableList,SIGNAL(doubleClicked(QModelIndex)),&mediaPlayer,SLOT(stop()));
+    connect(tableList,SIGNAL(doubleClicked(QModelIndex)),&mediaPlayer,SLOT(play()));
     //注：stop会触发mediaStateChanged，从而next()
     connect(&mediaPlayer,SIGNAL(stateChanged(QMediaPlayer::State)),this,SLOT(mediaStateChanged(QMediaPlayer::State)));
     //载入播放列表
@@ -137,6 +137,7 @@ void myMusicPlayer::loginWindow()
 
 void myMusicPlayer::doubleClickToPlay()
 {
+    mediaPlayer.stop();
     play = false;
 
     int rowl = tableList->currentItem()->row();
