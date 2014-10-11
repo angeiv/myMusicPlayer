@@ -170,7 +170,7 @@ void myMusicPlayer::playerPause()
 
 void myMusicPlayer::playerBackward()//下一曲
 {
-    int rowl = tableList->currentItem()->row();
+    int rowl = playList.currentIndex();
     int row2 = tableList->rowCount();
 
     progressBar->setValue(0);
@@ -191,7 +191,7 @@ void myMusicPlayer::playerBackward()//下一曲
 
 void myMusicPlayer::playerForward()//前一曲
 {
-    int row1 = tableList->currentItem()->row();
+    int row1 = playList.currentIndex();
     int row2 = tableList->rowCount();
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00 / 00:00"));
@@ -454,11 +454,11 @@ void myMusicPlayer::initWindow()
     btnVolume->setGeometry(220,400,32,32);
 
     addSong = new QPushButton(this);
-    addSong->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-    addSong->setGeometry(320,440,32,32);
+    addSong->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    addSong->setGeometry(320,442,32,32);
     cutSong = new QPushButton(this);
-    cutSong->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-    cutSong->setGeometry(355,440,32,32);
+    cutSong->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
+    cutSong->setGeometry(350,442,32,32);
 
     //设置默认播放模式：列表循环
     setPlaybackModeLoop();
