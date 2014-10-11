@@ -38,6 +38,7 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
     connect(btnForward, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
     connect(btnBackword, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
+    connect(tableList,SIGNAL(doubleClicked(QModelIndex)),&mediaPlayer,SLOT(stop()));
     //注：stop会触发mediaStateChanged，从而next()
     connect(&mediaPlayer,SIGNAL(stateChanged(QMediaPlayer::State)),this,SLOT(mediaStateChanged(QMediaPlayer::State)));
     //载入播放列表
@@ -60,8 +61,6 @@ void myMusicPlayer::openFile()
     if(filePath.isEmpty())
         return;
 
-    mediaPlayer.setMedia(QUrl::fromLocalFile(filePath));
-
     //文件名格式大部分为  歌手 - 歌曲名.mp3，分割内容显示在表格中
     QString info = QUrl::fromLocalFile(filePath).fileName();
     info = info.split(".").first();
@@ -83,9 +82,8 @@ void myMusicPlayer::openFile()
     saveList2File();
     mediaPlayer.play();
 
-    setLrcText(row-1);
+    setLrcText(row);
 
-    getLrc(tableList->rowCount()-1);
     btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 }
 
@@ -152,7 +150,6 @@ void myMusicPlayer::doubleClickToPlay()
 
     setLrcText(rowl);
 
-    getLrc(rowl);
     btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 
 }
@@ -170,58 +167,45 @@ void myMusicPlayer::playerPause()
     }
 }
 
-void myMusicPlayer::playerBackward()
+void myMusicPlayer::playerBackward()//下一曲
 {
-    int row2 =tableList->rowCount();
     int rowl = tableList->currentItem()->row();
+    int row2 = tableList->rowCount();
 
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00 / 00:00"));
 
-    if(rowl<row2-1)
-    {
-        tableList->setCurrentCell(rowl+1,0);
+    if(rowl + 1 == row2) {
+        tableList->setCurrentCell(0,0);
     }
-    else
-    {
-        rowl = 0;
-        tableList->setCurrentCell(rowl,0);
+    else {
+        tableList->setCurrentCell(rowl + 1,0);
     }
-    playList.setCurrentIndex(tableList->currentRow());
+    int row = tableList->currentRow();
+    playList.setCurrentIndex(row);
     mediaPlayer.play();
-    QString str = tableList->item(rowl,0)->text();
-    title->setText(str);
-    str = tableList->item(rowl,1)->text();
-    author->setText(str);
 
-    getLrc(rowl);
+    setLrcText(row);
 }
 
-void myMusicPlayer::playerForward()
+void myMusicPlayer::playerForward()//前一曲
 {
-
+    int row1 = tableList->currentItem()->row();
     int row2 = tableList->rowCount();
-    int rowl = tableList->currentItem()->row();
-    playList.setCurrentIndex(rowl);
-    if(rowl>0)
-    {
-        mediaPlayer.setMedia(playList.media(rowl-1).canonicalUrl());
-        mediaPlayer.play();
-        tableList->setCurrentCell(rowl-1,0);
-    }
-    else
-    {
-        mediaPlayer.setMedia(playList.media(row2-1).canonicalUrl());
-        mediaPlayer.play();
-        int rowl = row2;
-        tableList->setCurrentCell(rowl-1,0);
-    }
-    QString str = tableList->item(rowl,0)->text();
-    title->setText(str);
-    str = tableList->item(rowl,1)->text();
-    author->setText(str);
+    progressBar->setValue(0);
+    timeProgress->setText(tr("00:00 / 00:00"));
 
-    getLrc(rowl);
+    if(row1 < 1) {
+        tableList->setCurrentCell(row2 - 1,0);
+    }
+    else {
+        tableList->setCurrentCell(row1 - 1,0);
+    }
+    int row = tableList->currentRow();
+    playList.setCurrentIndex(row);
+    mediaPlayer.play();
+
+    setLrcText(row);
 }
 
 void myMusicPlayer::initPosition()
@@ -301,11 +285,10 @@ void myMusicPlayer::setPlaybackModeSequential()
     playList.setPlaybackMode(QMediaPlaylist::Sequential);
 }
 
-void myMusicPlayer::getLrc(int z)
+void myMusicPlayer::getLrc()
 {
-    QString title=this->tableList->item(z,0)->text();
-    QString author = this->tableList->item(z,1)->text();
-    QString filename = QString("./lrc/" + title + "-" + author + ".lrc");
+    QString filename = playList.currentMedia().canonicalUrl().fileName();
+    filename ="./lrc/" + filename.split(".").first() + ".lrc";
     lrc->addLrcFile(filename);
 }
 
@@ -324,6 +307,7 @@ void myMusicPlayer::setMuted()
 
 void myMusicPlayer::mediaStateChanged(QMediaPlayer::State state)
 {
+    getLrc();
     switch(state)
     {
     case QMediaPlayer::StoppedState:lrc->setDuration(0);
@@ -342,9 +326,7 @@ void myMusicPlayer::setLrcText(int row)
     title->setText(str);
     str = tableList->item(row,1)->text();
     author->setText(str);
-    QDate date = QDate::currentDate();
-    str = date.toString("yyyy-MM-dd");
-    lrc->setText(str);
+    lrc->setText("音乐魔盒");
 }
 
 void myMusicPlayer::loadFromFile()
@@ -442,7 +424,7 @@ void myMusicPlayer::initWindow()
 
     title->setGeometry(70,42,168,32);
     author->setGeometry(70,74,168,32);
-    lrc->setGeometry(70,160,168,32);
+    lrc->setGeometry(50,160,208,32);
 
     title->setAlignment(Qt::AlignCenter);
     author->setAlignment(Qt::AlignCenter);

@@ -86,7 +86,7 @@ private slots:
     void setPlaybackModeCurrentLoop();
     void setPlaybackModeSequential();
 
-    void getLrc(int z);//获取歌词
+    void getLrc();//获取歌词
 
     void setMuted();//设置静音
     void mediaStateChanged(QMediaPlayer::State state);
