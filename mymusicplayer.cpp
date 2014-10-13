@@ -36,8 +36,8 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(&mediaPlayer,SIGNAL(durationChanged(qint64)),this,SLOT(durationChanged(qint64)));
     connect(&mediaPlayer,SIGNAL(positionChanged(qint64)),this,SLOT(updatePosition(qint64)));
     connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
-    connect(btnForward, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
-    connect(btnBackword, SIGNAL(clicked()), &mediaPlayer, SLOT(stop()));
+    connect(btnForward, SIGNAL(clicked()), &mediaPlayer, SLOT(play()));
+    connect(btnBackword, SIGNAL(clicked()), &mediaPlayer, SLOT(play()));
     connect(tableList,SIGNAL(doubleClicked(QModelIndex)),&mediaPlayer,SLOT(play()));
     //注：stop会触发mediaStateChanged，从而next()
     connect(&mediaPlayer,SIGNAL(stateChanged(QMediaPlayer::State)),this,SLOT(mediaStateChanged(QMediaPlayer::State)));
@@ -170,6 +170,7 @@ void myMusicPlayer::playerPause()
 
 void myMusicPlayer::playerBackward()//下一曲
 {
+    mediaPlayer.stop();
     int rowl = playList.currentIndex();
     int row2 = tableList->rowCount();
 
@@ -191,6 +192,7 @@ void myMusicPlayer::playerBackward()//下一曲
 
 void myMusicPlayer::playerForward()//前一曲
 {
+    mediaPlayer.stop();
     int row1 = playList.currentIndex();
     int row2 = tableList->rowCount();
     progressBar->setValue(0);
