@@ -263,6 +263,7 @@ void myMusicPlayer::setPosition(int position)
     if (qAbs(mediaPlayer.position() - position) > 99) {
         progressBar->setValue(position);
         mediaPlayer.setPosition(position);
+        lrc->setDuration(position);
     }
 }
 
