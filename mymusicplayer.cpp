@@ -437,8 +437,11 @@ void myMusicPlayer::initWindow()
     btnForward = new QPushButton(this);
 
     btnBackword->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
+    btnBackword->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
     btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    btnPlayPause->setStyleSheet("border:2px groove gray;border-radius:32px;padding:2px 4px;");
     btnForward->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
+    btnForward->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
 
     btnBackword->setGeometry(62,400,32,32);
     btnPlayPause->setGeometry(102,385,64,64);
@@ -452,13 +455,16 @@ void myMusicPlayer::initWindow()
 
     btnVolume = new QPushButton(this);
     btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+    btnVolume->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
     btnVolume->setGeometry(220,400,32,32);
 
     addSong = new QPushButton(this);
     addSong->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    addSong->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
     addSong->setGeometry(320,442,32,32);
     cutSong = new QPushButton(this);
     cutSong->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
+    cutSong->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
     cutSong->setGeometry(350,442,32,32);
 
     //设置默认播放模式：列表循环
