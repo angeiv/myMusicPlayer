@@ -255,6 +255,10 @@ void myMusicPlayer::updatePosition(qint64 currentInfo)
 
         tStr = currentTime.toString(format) + " / " + totalTime.toString(format);
     }
+    if(currentInfo == totalDuration)
+    {
+        playerBackward();
+    }
     timeProgress->setText(tStr);
 
 }
