@@ -26,7 +26,6 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(cutSong,SIGNAL(clicked()),this,SLOT(cutsong()));
     connect(tableList,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(doubleClickToPlay()));//双击打开歌曲
     connect(btnPlayPause,SIGNAL(clicked()),this,SLOT(playerPause()));
-    connect(btnStart,SIGNAL(clicked())  ,this,SLOT(playerStart()));
     connect(btnForward,SIGNAL(clicked()),this,SLOT(playerBackward()));
     connect(btnBackword,SIGNAL(clicked()),this,SLOT(playerForward()));
 
@@ -37,6 +36,11 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(&mediaPlayer,SIGNAL(durationChanged(qint64)),this,SLOT(durationChanged(qint64)));
     connect(&mediaPlayer,SIGNAL(positionChanged(qint64)),this,SLOT(updatePosition(qint64)));
     connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
+    connect(btnForward, SIGNAL(clicked()), &mediaPlayer, SLOT(play()));
+    connect(btnBackword, SIGNAL(clicked()), &mediaPlayer, SLOT(play()));
+    connect(tableList,SIGNAL(doubleClicked(QModelIndex)),&mediaPlayer,SLOT(play()));
+    //注：stop会触发mediaStateChanged，从而next()
+    connect(&mediaPlayer,SIGNAL(stateChanged(QMediaPlayer::State)),this,SLOT(mediaStateChanged(QMediaPlayer::State)));
     //载入播放列表
     loadFromFile();
     playList.setPlaybackMode(QMediaPlaylist::Sequential);
@@ -49,13 +53,13 @@ myMusicPlayer::~myMusicPlayer()
 
 void myMusicPlayer::openFile()
 {
+    play = false;
+
     QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"),
                                                     "",  tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
 
     if(filePath.isEmpty())
         return;
-
-    mediaPlayer.setMedia(QUrl::fromLocalFile(filePath));
 
     //文件名格式大部分为  歌手 - 歌曲名.mp3，分割内容显示在表格中
     QString info = QUrl::fromLocalFile(filePath).fileName();
@@ -64,17 +68,23 @@ void myMusicPlayer::openFile()
     QString title = info.split("-").first();
     QString author = info.split("-").last();
 
-    tableList->insertRow(tableList->rowCount());
-    tableList->setItem(tableList->rowCount()-1,
+    int row = tableList->rowCount();
+
+    tableList->insertRow(row);
+    tableList->setItem(row,
                        0,new QTableWidgetItem(title));
-    tableList->setItem(tableList->rowCount()-1,
+    tableList->setItem(row,
                        1,new QTableWidgetItem(author));
 
     playList.addMedia(QUrl::fromLocalFile(filePath));
-    tableList->setCurrentCell(tableList->rowCount(),0);
+    playList.setCurrentIndex(row);
+    tableList->setCurrentCell(row,0);
     saveList2File();
     mediaPlayer.play();
 
+    setLrcText(row);
+
+    btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 }
 
 void myMusicPlayer::aboutWindow()
@@ -94,10 +104,11 @@ void myMusicPlayer::addsong()
     info = info.split(".").first();
     QString title = info.split("-").first().toUtf8();
     QString author = info.split("-").last().toUtf8();
-    tableList->insertRow(tableList->rowCount());
-    tableList->setItem(tableList->rowCount()-1,
+    int row = tableList->rowCount();
+    tableList->insertRow(row);
+    tableList->setItem(row,
                        0,new QTableWidgetItem(title));
-    tableList->setItem(tableList->rowCount()-1,
+    tableList->setItem(row,
                        1,new QTableWidgetItem(author));
     playList.addMedia(QUrl::fromLocalFile(filePath));
 
@@ -126,6 +137,8 @@ void myMusicPlayer::loginWindow()
 
 void myMusicPlayer::doubleClickToPlay()
 {
+    mediaPlayer.stop();
+    play = false;
 
     int rowl = tableList->currentItem()->row();
 
@@ -134,78 +147,68 @@ void myMusicPlayer::doubleClickToPlay()
     mediaPlayer.play();
 
     progressBar->setValue(0);
-    timeProgress->setText(tr("00:00/00:00"));
+    timeProgress->setText(tr("00:00 / 00:00"));
 
-    QString str = tableList->item(rowl,0)->text();
-    title->setText(str);
-    str = tableList->item(rowl,1)->text();
-    author->setText(str);
+    setLrcText(rowl);
 
-    getLrc(rowl);
+    btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 
 }
 
 void myMusicPlayer::playerPause()
 {
-    mediaPlayer.pause();
-    btnPlayPause->hide();
-    btnStart->show();
-
+    play = !play;
+    if(!play) {
+        mediaPlayer.play();
+        btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    }
+    else {
+        mediaPlayer.pause();
+        btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    }
 }
 
-void myMusicPlayer::playerStart()
+void myMusicPlayer::playerBackward()//下一曲
 {
-    mediaPlayer.play();
-    btnStart->hide();
-    btnPlayPause->show();
-}
-
-void myMusicPlayer::playerBackward()
-{
-    int row2 =tableList->rowCount();
-    int rowl = tableList->currentItem()->row();
-    playList.setCurrentIndex(rowl);
+    mediaPlayer.stop();
+    int rowl = playList.currentIndex();
+    int row2 = tableList->rowCount();
 
     progressBar->setValue(0);
-    timeProgress->setText(tr("00:00/00:00"));
+    timeProgress->setText(tr("00:00 / 00:00"));
 
-    if(rowl<row2-1)
-    {
-        mediaPlayer.setMedia(playList.media(rowl+1).canonicalUrl());
-        mediaPlayer.play();
-        tableList->setCurrentCell(rowl+1,0);
+    if(rowl + 1 == row2) {
+        tableList->setCurrentCell(0,0);
     }
-    else
-    {
-        mediaPlayer.setMedia(playList.media(0).canonicalUrl());
-        mediaPlayer.play();
-        rowl = 0;
-        tableList->setCurrentCell(rowl,0);
+    else {
+        tableList->setCurrentCell(rowl + 1,0);
     }
+    int row = tableList->currentRow();
+    playList.setCurrentIndex(row);
+    mediaPlayer.play();
 
+    setLrcText(row);
 }
 
-void myMusicPlayer::playerForward()
+void myMusicPlayer::playerForward()//前一曲
 {
-
+    mediaPlayer.stop();
+    int row1 = playList.currentIndex();
     int row2 = tableList->rowCount();
-    int rowl = tableList->currentItem()->row();
-    playList.setCurrentIndex(rowl);
-    if(rowl>0)
-    {
-        mediaPlayer.setMedia(playList.media(rowl-1).canonicalUrl());
-        mediaPlayer.play();
-        tableList->setCurrentCell(rowl-1,0);
-    }
-    else
-    {
-        mediaPlayer.setMedia(playList.media(row2-1).canonicalUrl());
-        mediaPlayer.play();
-        int rowl = row2;
-        tableList->setCurrentCell(rowl-1,0);
+    progressBar->setValue(0);
+    timeProgress->setText(tr("00:00 / 00:00"));
 
+    if(row1 < 1) {
+        tableList->setCurrentCell(row2 - 1,0);
     }
+    else {
+        tableList->setCurrentCell(row1 - 1,0);
+    }
+    int row = tableList->currentRow();
+    playList.setCurrentIndex(row);
+    mediaPlayer.play();
 
+    setLrcText(row);
 }
 
 void myMusicPlayer::initPosition()
@@ -259,11 +262,11 @@ void myMusicPlayer::updatePosition(qint64 currentInfo)
 
 void myMusicPlayer::setPosition(int position)
 {
-
-    /*    if (mediaPlayer.position()*100/mediaPlayer.duration() != position) {
-        updatePosition(position);
-    }*/
-    //qDebug()<<mediaPlayer.position()*100/mediaPlayer.duration()<<position;
+    if (qAbs(mediaPlayer.position() - position) > 99) {
+        progressBar->setValue(position);
+        mediaPlayer.setPosition(position);
+        lrc->setDuration(position);
+    }
 }
 
 void myMusicPlayer::setPlaybackModeLoop()
@@ -286,13 +289,11 @@ void myMusicPlayer::setPlaybackModeSequential()
     playList.setPlaybackMode(QMediaPlaylist::Sequential);
 }
 
-void myMusicPlayer::getLrc(int z)
+void myMusicPlayer::getLrc()
 {
-    QString title=this->tableList->item(z,0)->text();
-    QString author = this->tableList->item(z,1)->text();
-    QString filename = QString(title+"-"+author+".lrc");
+    QString filename = playList.currentMedia().canonicalUrl().fileName();
+    filename ="./lrc/" + filename.split(".").first() + ".lrc";
     lrc->addLrcFile(filename);
-    //lrc->showLrc();
 }
 
 void myMusicPlayer::setMuted()
@@ -306,6 +307,30 @@ void myMusicPlayer::setMuted()
     else {
         btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
     }
+}
+
+void myMusicPlayer::mediaStateChanged(QMediaPlayer::State state)
+{
+    getLrc();
+    switch(state)
+    {
+    case QMediaPlayer::StoppedState:lrc->setDuration(0);
+        break;
+    case QMediaPlayer::PlayingState:lrc->startLrc();
+        break;
+    default:
+        lrc->pauseLrc();
+        break;
+    }
+}
+
+void myMusicPlayer::setLrcText(int row)
+{
+    QString str = tableList->item(row,0)->text();
+    title->setText(str);
+    str = tableList->item(row,1)->text();
+    author->setText(str);
+    lrc->setText("音乐魔盒");
 }
 
 void myMusicPlayer::loadFromFile()
@@ -396,12 +421,14 @@ void myMusicPlayer::initWindow()
     lrc = new Lrc(this);
 
     title->setText("欢迎使用音乐魔盒");
-    author->setText("........");
-    lrc->setText(".........");
+    author->setText("V1.0");
+    QDate date = QDate::currentDate();
+    QString str = date.toString("yyyy-MM-dd");
+    lrc->setText(str);
 
     title->setGeometry(70,42,168,32);
     author->setGeometry(70,74,168,32);
-    lrc->setGeometry(70,160,168,32);
+    lrc->setGeometry(50,160,208,32);
 
     title->setAlignment(Qt::AlignCenter);
     author->setAlignment(Qt::AlignCenter);
@@ -410,37 +437,41 @@ void myMusicPlayer::initWindow()
     btnBackword = new QPushButton(this);
     btnPlayPause = new QPushButton(this);
     btnForward = new QPushButton(this);
-    btnStart = new QPushButton(this);
 
     btnBackword->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
-    btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    btnBackword->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
+    btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    btnPlayPause->setStyleSheet("border:2px groove gray;border-radius:32px;padding:2px 4px;");
     btnForward->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
-    btnStart->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    btnForward->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
 
     btnBackword->setGeometry(62,400,32,32);
     btnPlayPause->setGeometry(102,385,64,64);
-    btnStart->setGeometry(102,385,64,64);
     btnForward->setGeometry(174,400,32,32);
 
     btnBackword->setCursor(Qt::PointingHandCursor);
     btnPlayPause->setCursor(Qt::PointingHandCursor);
-    btnStart->setCursor(Qt::PointingHandCursor);
     btnForward->setCursor(Qt::PointingHandCursor);
 
     initPosition();
 
     btnVolume = new QPushButton(this);
     btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+    btnVolume->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
     btnVolume->setGeometry(220,400,32,32);
 
     addSong = new QPushButton(this);
-    addSong->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-    addSong->setGeometry(320,440,32,32);
+    addSong->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    addSong->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
+    addSong->setGeometry(320,442,32,32);
     cutSong = new QPushButton(this);
-    cutSong->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-    cutSong->setGeometry(355,440,32,32);
+    cutSong->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
+    cutSong->setStyleSheet("border:2px groove gray;border-radius:16px;padding:2px 4px;");
+    cutSong->setGeometry(350,442,32,32);
 
     //设置默认播放模式：列表循环
     setPlaybackModeLoop();
 
+    playerMuted  = false;
+    play = true;
 }

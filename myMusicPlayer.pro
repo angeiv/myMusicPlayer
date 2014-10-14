@@ -16,13 +16,13 @@ SOURCES += main.cpp\
     about.cpp \
     login/login.cpp \
     mymusicplayer.cpp \
-    lrc.cpp
+    lrc/lrc.cpp
 
 HEADERS  += \
     about.h \
     login/login.h \
     mymusicplayer.h \
-    lrc.h
+    lrc/lrc.h
 
 FORMS    += \
     about.ui \

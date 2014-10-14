@@ -1,4 +1,9 @@
-﻿#include "mymusicplayer.h"
+﻿//添加跨编译器的代码
+#if _MSC_VER >= 1600
+#pragma execution_character_set("utf-8")
+#endif
+
+#include "mymusicplayer.h"
 #include <QApplication>
 #include <QDesktopWidget>
 
