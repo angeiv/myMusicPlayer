@@ -295,7 +295,7 @@ void myMusicPlayer::setPlaybackModeSequential()
 
 void myMusicPlayer::getLrc()
 {
-    QString filename = playList.currentMedia().canonicalUrl().fileName();
+    QString filename = playList.currentMedia().request().url().fileName();
     filename ="./lrc/" + filename.split(".").first() + ".lrc";
     lrc->addLrcFile(filename);
 }
@@ -345,7 +345,7 @@ void myMusicPlayer::loadFromFile()
     mediaPlayer.setPlaylist(&playList);
     int count = playList.mediaCount();
     for(int i = 0; i < count ; i++) {
-        QString info = playList.media(i).canonicalUrl().fileName().toUtf8().data();
+        QString info = playList.media(i).request().url().fileName().toUtf8().data();
         info = info.split(".").first();
         QString title = info.split("-").first();
         QString author = info.split("-").last();

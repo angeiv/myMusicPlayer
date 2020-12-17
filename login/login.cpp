@@ -2,19 +2,20 @@
 #include "ui_login.h"
 #include "QTime"
 #include "QMessageBox"
+#include <QRandomGenerator>
 
 //验证码生成函数
 int login::setVerifyCode()
 {
     QTime time;
     time = QTime::currentTime();
-    qsrand(time.msec()+time.second()*1000);
+    QRandomGenerator RandomNumber = QRandomGenerator(time.msec()+time.second()*1000);
 
     QString code = "";
-    code += QString::number(qrand()%10);
-    code += QString::number(qrand()%10);
-    code += QString::number(qrand()%10);
-    code += QString::number(qrand()%10);
+    code += QString::number(RandomNumber.generate()%10);
+    code += QString::number(RandomNumber.generate()%10);
+    code += QString::number(RandomNumber.generate()%10);
+    code += QString::number(RandomNumber.generate()%10);
 
     int VerifyCode = code.toInt();
 
