@@ -5,7 +5,7 @@
 
 #include "mymusicplayer.h"
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QScreen>
 
 
 #include "QTranslator"
@@ -17,7 +17,10 @@ int main(int argc, char *argv[])
 
     //加载Qt中的资源文件，使Qt显示中文（包括QMessageBox、文本框右键菜单等）
     QTranslator translator;
-    translator.load(":/resources/translations/qt_zh_CN.qm");
+    if (!translator.load(":/resources/translations/qt_zh_CN.qm")) {
+        qWarning() << "无法加载翻译文件";
+        // 可以在这里添加额外的错误处理逻辑
+    }
     a.installTranslator(&translator);
 
 //    MainWindow w;
@@ -27,7 +30,8 @@ int main(int argc, char *argv[])
 
     myMusicPlayer *mp = new myMusicPlayer();
     //把窗口居中显示
-    mp->move((QApplication::desktop()->width() - mp->width())/2,(QApplication::desktop()->height() - mp->height())/2);
+    QScreen *screen = QApplication::primaryScreen();
+    mp->move((screen->geometry().width() - mp->width())/2, (screen->geometry().height() - mp->height())/2);
     mp->show();
 
     return a.exec();

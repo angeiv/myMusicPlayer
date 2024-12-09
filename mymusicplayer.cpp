@@ -4,15 +4,13 @@
 #include "login/login.h"
 #include <QtWidgets>
 #include <QDebug>
-#include <string>
-#include <QTextCodec>
+#include <QStringConverter>
+#include <QRandomGenerator>
 
 myMusicPlayer::myMusicPlayer(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::myMusicPlayer)
 {
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
-
     ui->setupUi(this);
 
     initWindow();
@@ -38,12 +36,23 @@ myMusicPlayer::myMusicPlayer(QWidget *parent) :
     connect(btnVolume,SIGNAL(clicked()),this,SLOT(setMuted()));//设置无声
     connect(btnForward, SIGNAL(clicked()), &mediaPlayer, SLOT(play()));
     connect(btnBackword, SIGNAL(clicked()), &mediaPlayer, SLOT(play()));
-    connect(tableList,SIGNAL(doubleClicked(QModelIndex)),&mediaPlayer,SLOT(play()));
+    connect(tableList, &QTableWidget::doubleClicked, this, &myMusicPlayer::doubleClickToPlay);
     //注：stop会触发mediaStateChanged，从而next()
-    connect(&mediaPlayer,SIGNAL(stateChanged(QMediaPlayer::State)),this,SLOT(mediaStateChanged(QMediaPlayer::State)));
+    connect(&mediaPlayer, &QMediaPlayer::playbackStateChanged, this, &myMusicPlayer::mediaStateChanged);
     //载入播放列表
     loadFromFile();
-    playList.setPlaybackMode(QMediaPlaylist::Sequential);
+    currentIndex = 0;
+    playbackMode = PlaybackMode::Sequential;
+    
+    connect(&mediaPlayer, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
+        if (status == QMediaPlayer::EndOfMedia) {
+            playNext();
+        }
+    });
+
+    QAudioOutput *audioOutput = new QAudioOutput(this);
+    mediaPlayer.setAudioOutput(audioOutput);
+    qDebug() << "音频输出已设置";
 }
 
 myMusicPlayer::~myMusicPlayer()
@@ -76,8 +85,8 @@ void myMusicPlayer::openFile()
     tableList->setItem(row,
                        1,new QTableWidgetItem(author));
 
-    playList.addMedia(QUrl::fromLocalFile(filePath));
-    playList.setCurrentIndex(row);
+    playlist.append(QUrl::fromLocalFile(filePath));
+    currentIndex = row;
     tableList->setCurrentCell(row,0);
     saveList2File();
     mediaPlayer.play();
@@ -110,22 +119,83 @@ void myMusicPlayer::addsong()
                        0,new QTableWidgetItem(title));
     tableList->setItem(row,
                        1,new QTableWidgetItem(author));
-    playList.addMedia(QUrl::fromLocalFile(filePath));
+    playlist.append(QUrl::fromLocalFile(filePath));
 
     saveList2File();
 }
 
 void myMusicPlayer::cutsong()
 {
-
-    playList.removeMedia(tableList->rowCount()-1);
-
+    // 获取当前选中的项目
     QTableWidgetItem *item = tableList->currentItem();
-    if(item ==Q_NULLPTR)return;
-    playList.removeMedia(item->row());
-    tableList->removeRow(item->row());
-    saveList2File();
+    if (!item) {
+        qDebug() << "没有选中要删除的歌曲";
+        return;
+    }
 
+    int row = item->row();
+    if (row < 0 || row >= playlist.size()) {
+        qDebug() << "无效的行索引：" << row;
+        return;
+    }
+
+    bool wasPlaying = !play;  // 记录当前是否在播放
+    
+    // 如果正在播放当前选中的歌曲
+    if (row == currentIndex) {
+        mediaPlayer.stop();
+        mediaPlayer.setSource(QUrl());  // 清除媒体源
+        play = true;
+        btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+        
+        // 重置进度条和时间显示
+        progressBar->setValue(0);
+        timeProgress->setText(tr("00:00 / 00:00"));
+    }
+
+    // 从播放列表和表格中删除
+    playlist.removeAt(row);
+    tableList->removeRow(row);
+
+    // 更新当前索引
+    if (playlist.isEmpty()) {
+        // 如果删除后播放列表为空
+        currentIndex = -1;
+        play = true;
+        title->setText("欢迎使用音乐魔盒");
+        author->setText("V1.0");
+        lrc->setText("音乐魔盒");
+    } else {
+        // 调整当前索引
+        if (row <= currentIndex) {
+            currentIndex = qMax(0, currentIndex - 1);
+        }
+        
+        // 确保currentIndex在有效范围内
+        currentIndex = qBound(0, currentIndex, playlist.size() - 1);
+        tableList->setCurrentCell(currentIndex, 0);
+        
+        // 更新显示信息
+        QTableWidgetItem* titleItem = tableList->item(currentIndex, 0);
+        QTableWidgetItem* authorItem = tableList->item(currentIndex, 1);
+        if (titleItem && authorItem) {
+            title->setText(titleItem->text());
+            author->setText(authorItem->text());
+            
+            // 如果之前在播放，且删除的不是当前播放的歌曲，继续播放新的歌曲
+            if (wasPlaying && row != currentIndex) {
+                mediaPlayer.setSource(playlist[currentIndex]);
+                mediaPlayer.play();
+                play = false;
+                btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+                setLrcText(currentIndex);
+            }
+        }
+    }
+
+    // 保存更新后的播放列表
+    saveList2File();
+    qDebug() << "歌曲已删除，当前播放列表还有" << playlist.size() << "首歌曲，当前索引：" << currentIndex;
 }
 
 void myMusicPlayer::loginWindow()
@@ -141,9 +211,10 @@ void myMusicPlayer::doubleClickToPlay()
     play = false;
 
     int rowl = tableList->currentItem()->row();
-
-    playList.setCurrentIndex(rowl);
-
+    currentIndex = rowl;
+    
+    // 设置媒体源并播放
+    mediaPlayer.setSource(playlist[currentIndex]);
     mediaPlayer.play();
 
     progressBar->setValue(0);
@@ -152,26 +223,58 @@ void myMusicPlayer::doubleClickToPlay()
     setLrcText(rowl);
 
     btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-
 }
 
 void myMusicPlayer::playerPause()
 {
+    // 检查播放列表是否为空
+    if (playlist.isEmpty()) {
+        qDebug() << "播放列表为空";
+        return;
+    }
+
+    // 确保currentIndex有效
+    if (currentIndex < 0 || currentIndex >= playlist.size()) {
+        currentIndex = 0;
+        qDebug() << "重置当前索引为0";
+    }
+
     play = !play;
     if(!play) {
+        // 检查当前是否有设置媒体源
+        if (mediaPlayer.source().isEmpty()) {
+            qDebug() << "设置新的媒体源：" << playlist[currentIndex].toString();
+            mediaPlayer.setSource(playlist[currentIndex]);
+        }
+        
         mediaPlayer.play();
         btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+        
+        // 更新界面显示
+        QTableWidgetItem* titleItem = tableList->item(currentIndex, 0);
+        QTableWidgetItem* authorItem = tableList->item(currentIndex, 1);
+        if (titleItem && authorItem) {
+            title->setText(titleItem->text());
+            author->setText(authorItem->text());
+            setLrcText(currentIndex);
+        }
     }
     else {
         mediaPlayer.pause();
         btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     }
+    
+    qDebug() << "播放状态：" << (play ? "暂停" : "播放") 
+             << "，当前索引：" << currentIndex 
+             << "，播放列表大小：" << playlist.size();
 }
 
 void myMusicPlayer::playerBackward()//下一曲
 {
+    if (playlist.isEmpty()) return;
+    
     mediaPlayer.stop();
-    int rowl = playList.currentIndex();
+    int rowl = currentIndex;
     int row2 = tableList->rowCount();
 
     progressBar->setValue(0);
@@ -179,36 +282,49 @@ void myMusicPlayer::playerBackward()//下一曲
 
     if(rowl + 1 == row2) {
         tableList->setCurrentCell(0,0);
+        currentIndex = 0;
     }
     else {
         tableList->setCurrentCell(rowl + 1,0);
+        currentIndex = rowl + 1;
     }
-    int row = tableList->currentRow();
-    playList.setCurrentIndex(row);
+    
+    // 设置媒体源并播放
+    mediaPlayer.setSource(playlist[currentIndex]);
     mediaPlayer.play();
+    play = false;  // 设置为播放状态
+    btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 
-    setLrcText(row);
+    setLrcText(currentIndex);
 }
 
 void myMusicPlayer::playerForward()//前一曲
 {
+    if (playlist.isEmpty()) return;
+    
     mediaPlayer.stop();
-    int row1 = playList.currentIndex();
+    int row1 = currentIndex;
     int row2 = tableList->rowCount();
+    
     progressBar->setValue(0);
     timeProgress->setText(tr("00:00 / 00:00"));
 
     if(row1 < 1) {
         tableList->setCurrentCell(row2 - 1,0);
+        currentIndex = row2 - 1;
     }
     else {
         tableList->setCurrentCell(row1 - 1,0);
+        currentIndex = row1 - 1;
     }
-    int row = tableList->currentRow();
-    playList.setCurrentIndex(row);
+    
+    // 设置媒体源并播放
+    mediaPlayer.setSource(playlist[currentIndex]);
     mediaPlayer.play();
+    play = false;  // 设置为播放状态
+    btnPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 
-    setLrcText(row);
+    setLrcText(currentIndex);
 }
 
 void myMusicPlayer::initPosition()
@@ -275,27 +391,27 @@ void myMusicPlayer::setPosition(int position)
 
 void myMusicPlayer::setPlaybackModeLoop()
 {
-    playList.setPlaybackMode(QMediaPlaylist::Loop);
+    playbackMode = PlaybackMode::Loop;
 }
 
 void myMusicPlayer::setPlaybackModeRandom()
 {
-    playList.setPlaybackMode(QMediaPlaylist::Random);
+    playbackMode = PlaybackMode::Random;
 }
 
 void myMusicPlayer::setPlaybackModeCurrentLoop()
 {
-    playList.setPlaybackMode(QMediaPlaylist::CurrentItemInLoop);
+    playbackMode = PlaybackMode::CurrentItemInLoop;
 }
 
 void myMusicPlayer::setPlaybackModeSequential()
 {
-    playList.setPlaybackMode(QMediaPlaylist::Sequential);
+    playbackMode = PlaybackMode::Sequential;
 }
 
 void myMusicPlayer::getLrc()
 {
-    QString filename = playList.currentMedia().canonicalUrl().fileName();
+    QString filename = playlist[currentIndex].fileName();
     filename ="./lrc/" + filename.split(".").first() + ".lrc";
     lrc->addLrcFile(filename);
 }
@@ -303,7 +419,7 @@ void myMusicPlayer::getLrc()
 void myMusicPlayer::setMuted()
 {
     playerMuted = !playerMuted;
-    mediaPlayer.setMuted(playerMuted);
+    mediaPlayer.audioOutput()->setMuted(playerMuted);
 
     if(playerMuted) {
         btnVolume->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
@@ -313,14 +429,16 @@ void myMusicPlayer::setMuted()
     }
 }
 
-void myMusicPlayer::mediaStateChanged(QMediaPlayer::State state)
+void myMusicPlayer::mediaStateChanged(QMediaPlayer::PlaybackState state)
 {
     getLrc();
     switch(state)
     {
-    case QMediaPlayer::StoppedState:lrc->setDuration(0);
+    case QMediaPlayer::StoppedState:
+        lrc->setDuration(0);
         break;
-    case QMediaPlayer::PlayingState:lrc->startLrc();
+    case QMediaPlayer::PlayingState:
+        lrc->startLrc();
         break;
     default:
         lrc->pauseLrc();
@@ -339,37 +457,79 @@ void myMusicPlayer::setLrcText(int row)
 
 void myMusicPlayer::loadFromFile()
 {
-    QTextCodec *codec=QTextCodec::codecForName("UTF-8");
+    QString path = QApplication::applicationDirPath() + "/playlist.txt";
+    QFile file(path);
 
-    playList.load(QUrl::fromLocalFile("plist.m3u"),"m3u");
-    mediaPlayer.setPlaylist(&playList);
-    int count = playList.mediaCount();
-    for(int i = 0; i < count ; i++) {
-        QString info = playList.media(i).canonicalUrl().fileName().toUtf8().data();
-        info = info.split(".").first();
-        QString title = info.split("-").first();
-        QString author = info.split("-").last();
+    if (!file.exists()) {
+        qDebug() << "播放列表文件不存在：" << path;
+        return;
+    }
 
-        QByteArray ba = author.toLatin1();
-        char* mm = ba.data();
-        author = codec->toUnicode(mm);
-        ba = title.toLatin1();
-        mm = ba.data();
-        title = codec->toUnicode(mm);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "无法打开播放列表文件：" << file.errorString();
+        return;
+    }
 
-        tableList->insertRow(tableList->rowCount());
-        tableList->setItem(tableList->rowCount()-1,
-                           0,new QTableWidgetItem(title));
-        tableList->setItem(tableList->rowCount()-1,
-                           1,new QTableWidgetItem(author));
+    playlist.clear();
+    tableList->setRowCount(0);  // 清空表格
+
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        if (line.isEmpty()) continue;
+
+        QUrl url = QUrl::fromLocalFile(line);
+        playlist.append(url);
+
+        // 更新界面显示
+        int row = tableList->rowCount();
+        tableList->insertRow(row);
+        
+        // 从文件名中提取歌手和歌曲名信息
+        QString fileName = url.fileName();
+        fileName = fileName.split(".").first();  // 移除扩展名
+        
+        QString title, author;
+        if (fileName.contains("-")) {
+            QStringList parts = fileName.split("-");
+            title = parts.first().trimmed();
+            author = parts.last().trimmed();
+        } else {
+            title = fileName;
+            author = tr("未知歌手");
+        }
+        
+        tableList->setItem(row, 0, new QTableWidgetItem(title));
+        tableList->setItem(row, 1, new QTableWidgetItem(author));
+    }
+
+    file.close();
+    qDebug() << "播放列表加载完成，共" << playlist.size() << "项";
+    
+    // 如果列表不为空，设置当前索引为0
+    if (!playlist.isEmpty()) {
+        currentIndex = 0;
+        tableList->setCurrentCell(0, 0);
     }
 }
 
 void myMusicPlayer::saveList2File()
 {
-    if(!playList.save(QUrl::fromLocalFile("plist.m3u"),"m3u")) {
-        qDebug()<<playList.errorString();//对话框提示
+    QString path = QApplication::applicationDirPath() + "/playlist.txt";
+    QFile file(path);
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "无法打开播放列表文件进行写入：" << file.errorString();
+        return;
     }
+
+    QTextStream out(&file);
+    for (const QUrl &url : playlist) {
+        out << url.toLocalFile() << "\n";
+    }
+
+    file.close();
+    qDebug() << "播放列表已保存，共" << playlist.size() << "项";
 }
 
 void myMusicPlayer::initWindow()
@@ -386,10 +546,10 @@ void myMusicPlayer::initWindow()
     menu->setGeometry(QRect(0,0,780,23));
     menuOpen = menu->addMenu(tr("打开(&O)"));
     actionNew = menuOpen->addAction(tr("音乐(&M)..."));
-    actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
+    actionNew->setShortcut(QKeySequence("Ctrl+M"));
     menuList = menu->addMenu(tr("列表(&L)"));
     actionList = menuList->addAction(tr("打开本地列表..."));
-    menuLogin = menu->addMenu("登陆");
+    menuLogin = menu->addMenu("登录");
     actionLogin = menuLogin->addAction(tr("登陆账号..."));
     menuAbout = menu->addMenu(tr("帮助(&H)"));
     actionAbout = menuAbout->addAction(tr("关于音乐魔盒..."));
@@ -401,7 +561,7 @@ void myMusicPlayer::initWindow()
     tableList->setColumnWidth(0,150);
     tableList->setRowCount(0);
     tableList->setEditTriggers(QAbstractItemView::NoEditTriggers);//设置禁止修改
-    tableList->setSelectionMode(QAbstractItemView::SingleSelection);//设置只可选中单个
+    tableList->setSelectionMode(QAbstractItemView::SingleSelection);//设置只可可选中单个
     tableList->setHorizontalHeaderLabels(QStringList()<<"歌曲名"<<"歌手");
 
     tableList->setShowGrid(false);
@@ -478,4 +638,34 @@ void myMusicPlayer::initWindow()
 
     playerMuted  = false;
     play = true;
+}
+
+void myMusicPlayer::playNext()
+{
+    if (playlist.isEmpty()) return;
+    
+    switch(playbackMode) {
+        case PlaybackMode::Sequential:
+            if (currentIndex < playlist.size() - 1) {
+                currentIndex++;
+                playerBackward();
+            } else {
+                mediaPlayer.stop();
+            }
+            break;
+            
+        case PlaybackMode::Loop:
+            playerBackward();  // 已经在playerBackward()中处理了循环逻辑
+            break;
+            
+        case PlaybackMode::Random:
+            currentIndex = QRandomGenerator::global()->bounded(playlist.size());
+            playerBackward();
+            break;
+            
+        case PlaybackMode::CurrentItemInLoop:
+            mediaPlayer.setPosition(0);
+            mediaPlayer.play();
+            break;
+    }
 }

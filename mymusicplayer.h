@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QMediaPlayer>
-#include <QMediaPlaylist>
 #include <QMenuBar>
 #include <QTextEdit>
 #include <QTableWidget>
@@ -12,10 +11,18 @@
 #include <QSlider>
 #include <QLabel>
 #include <lrc/lrc.h>
+#include <QAudioOutput>
 
 namespace Ui {
 class myMusicPlayer;
 }
+
+enum class PlaybackMode {
+    Sequential,
+    Loop,
+    Random,
+    CurrentItemInLoop
+};
 
 class myMusicPlayer : public QWidget
 {
@@ -60,12 +67,15 @@ private:
     QPushButton *addSong;//添加歌曲
     QPushButton *cutSong;//删除歌曲
     QMediaPlayer mediaPlayer;//音乐播放
-    QMediaPlaylist playList;//音乐播放列表
     qint64 totalDuration;
     Lrc *lrc;//歌词
 
     bool play;//是否可以播放
     bool playerMuted;//是否无声
+
+    QList<QUrl> playlist;
+    int currentIndex;
+    PlaybackMode playbackMode;
 
 private slots:
     void loadFromFile();
@@ -89,9 +99,11 @@ private slots:
     void getLrc();//获取歌词
 
     void setMuted();//设置静音
-    void mediaStateChanged(QMediaPlayer::State state);
+    void mediaStateChanged(QMediaPlayer::PlaybackState state);
 
     void setLrcText(int row);
+
+    void playNext();
 
 };
 
