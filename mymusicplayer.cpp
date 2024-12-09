@@ -550,7 +550,7 @@ void myMusicPlayer::initWindow()
     menuList = menu->addMenu(tr("列表(&L)"));
     actionList = menuList->addAction(tr("打开本地列表..."));
     menuLogin = menu->addMenu("登录");
-    actionLogin = menuLogin->addAction(tr("登陆账号..."));
+    actionLogin = menuLogin->addAction(tr("登录账号..."));
     menuAbout = menu->addMenu(tr("帮助(&H)"));
     actionAbout = menuAbout->addAction(tr("关于音乐魔盒..."));
 
@@ -561,7 +561,7 @@ void myMusicPlayer::initWindow()
     tableList->setColumnWidth(0,150);
     tableList->setRowCount(0);
     tableList->setEditTriggers(QAbstractItemView::NoEditTriggers);//设置禁止修改
-    tableList->setSelectionMode(QAbstractItemView::SingleSelection);//设置只可可选中单个
+    tableList->setSelectionMode(QAbstractItemView::SingleSelection);//设置只可选中单个
     tableList->setHorizontalHeaderLabels(QStringList()<<"歌曲名"<<"歌手");
 
     tableList->setShowGrid(false);

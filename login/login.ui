@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>登陆</string>
+   <string>登录</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../musicplayer.qrc">
@@ -218,7 +218,7 @@
        <cursorShape>PointingHandCursor</cursorShape>
       </property>
       <property name="text">
-       <string>登陆</string>
+       <string>登录</string>
       </property>
      </widget>
     </item>
