@@ -65,7 +65,7 @@ void myMusicPlayer::openFile()
     play = false;
 
     QString filePath = QFileDialog::getOpenFileName(this, tr("打开音乐文件"),
-                                                    "",  tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
+                                                    "",  tr("MP3音乐文件(*.mp3);;FLAC音乐文件(*.flac);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
 
     if(filePath.isEmpty())
         return;
@@ -105,7 +105,7 @@ void myMusicPlayer::aboutWindow()
 void myMusicPlayer::addsong()
 {
     QString filePath = QFileDialog::getOpenFileName(this,tr("打开音乐文件"),"",
-                                                    tr("MP3音乐文件(*.mp3);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
+                                                    tr("MP3音乐文件(*.mp3);;FLAC音乐文件(*.flac);;WMV音乐文件(*.wmv *.wma *wav);;全部文件(*.*)"));
     if(filePath.isEmpty())
         return ;
 
