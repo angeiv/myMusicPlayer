@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>qml/Main.qml</file>
         <file>resources/img/headphones.png</file>
         <file>resources/img/arrow-circle-left.png</file>
         <file>resources/img/arrow-circle-right.png</file>
@@ -11,5 +12,6 @@
         <file>resources/img/double-arrows-right.png</file>
         <file>resources/img/lrc.jpg</file>
         <file>resources/img/logo.ico</file>
+        <file>resources/translations/qt_zh_CN.qm</file>
     </qresource>
 </RCC>

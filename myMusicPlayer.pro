@@ -7,6 +7,9 @@
 QT       += core \
     gui \
     multimedia \
+    qml \
+    quick \
+    quickcontrols2 \
     widgets
 
 TARGET = myMusicPlayer
@@ -14,21 +17,21 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-    about.cpp \
-    login/login.cpp \
-    mymusicplayer.cpp \
-    lrc/lrc.cpp
+    appcontroller.cpp \
+    audiodecoder.cpp \
+    dr_libs_impl.cpp \
+    lyricsmodel.cpp \
+    playlistmodel.cpp \
+    playerengine.cpp
 
 HEADERS  += \
-    about.h \
-    login/login.h \
-    mymusicplayer.h \
-    lrc/lrc.h
+    appcontroller.h \
+    audiodecoder.h \
+    lyricsmodel.h \
+    playlistmodel.h \
+    playerengine.h
 
-FORMS    += \
-    about.ui \
-    login/login.ui \
-    mymusicplayer.ui
+INCLUDEPATH += third_party/dr_libs
 
 RESOURCES += \
     musicplayer.qrc

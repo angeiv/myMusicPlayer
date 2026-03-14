@@ -21,9 +21,17 @@ Makefile*
 *-build-*
 /build/
 
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+*.cmake.user
+
 # QtCreator
 
 *.autosave
+.codex-home/
 
 # =========================
 # Operating System Files

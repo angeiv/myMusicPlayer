@@ -3,17 +3,23 @@
 #pragma execution_character_set("utf-8")
 #endif
 
-#include "mymusicplayer.h"
 #include <QApplication>
-#include <QScreen>
+#include <QGuiApplication>
+#include <QIcon>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QQuickStyle>
+#include <QTranslator>
 
-
-#include "QTranslator"
+#include "appcontroller.h"
+#include "playerengine.h"
 
 int main(int argc, char *argv[])
 {
+    QQuickStyle::setStyle("Material");
+
     //创建QApplication对象，管理整个应用程序的资源，通过argc和argv来获取它自己的命令行参数；
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
     //加载Qt中的资源文件，使Qt显示中文（包括QMessageBox、文本框右键菜单等）
     QTranslator translator;
@@ -21,18 +27,26 @@ int main(int argc, char *argv[])
         qWarning() << "无法加载翻译文件";
         // 可以在这里添加额外的错误处理逻辑
     }
-    a.installTranslator(&translator);
+    app.installTranslator(&translator);
 
-//    MainWindow w;
-//    w.show();
-//如何关闭主窗口的同时关闭所有的窗口？
+    QCoreApplication::setOrganizationName("myMusicPlayer");
+    QCoreApplication::setApplicationName("myMusicPlayer");
+    QCoreApplication::setApplicationVersion("1.0");
 
+    QGuiApplication::setWindowIcon(QIcon(":/resources/img/logo.ico"));
 
-    myMusicPlayer *mp = new myMusicPlayer();
-    //把窗口居中显示
-    QScreen *screen = QApplication::primaryScreen();
-    mp->move((screen->geometry().width() - mp->width())/2, (screen->geometry().height() - mp->height())/2);
-    mp->show();
+    qmlRegisterUncreatableType<PlayerEngine>("MyMusicPlayer", 1, 0, "PlayerEngine", "Enums only");
 
-    return a.exec();
+    PlayerEngine player;
+    AppController controller(&player);
+
+    QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("player", &player);
+    engine.rootContext()->setContextProperty("app", &controller);
+    engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+    if (engine.rootObjects().isEmpty()) {
+        return -1;
+    }
+
+    return app.exec();
 }
