@@ -7,6 +7,9 @@
 QT       += core \
     gui \
     multimedia \
+    qml \
+    quick \
+    quickcontrols2 \
     widgets
 
 TARGET = myMusicPlayer
@@ -18,12 +21,14 @@ SOURCES += main.cpp\
     login/login.cpp \
     mymusicplayer.cpp \
     lrc/lrc.cpp \
+    appcontroller.cpp \
     lyricsmodel.cpp \
     playlistmodel.cpp \
     playerengine.cpp
 
 HEADERS  += \
     about.h \
+    appcontroller.h \
     login/login.h \
     mymusicplayer.h \
     lrc/lrc.h \

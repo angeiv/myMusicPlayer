@@ -69,6 +69,7 @@ public:
     Q_INVOKABLE void previous();
 
     Q_INVOKABLE void addFiles(const QStringList &filePaths);
+    Q_INVOKABLE int addFilesAndPlay(const QStringList &filePaths);
     Q_INVOKABLE void removeAt(int index);
     Q_INVOKABLE void clear();
 

@@ -201,6 +201,24 @@ void PlayerEngine::addFiles(const QStringList &filePaths)
     }
 }
 
+int PlayerEngine::addFilesAndPlay(const QStringList &filePaths)
+{
+    if (filePaths.isEmpty()) {
+        return -1;
+    }
+
+    const int start = m_playlist->rowCount();
+    addFiles(filePaths);
+    if (m_playlist->rowCount() == 0) {
+        return -1;
+    }
+
+    const int index = qBound(0, start, m_playlist->rowCount() - 1);
+    setCurrentIndex(index);
+    play();
+    return index;
+}
+
 void PlayerEngine::removeAt(int index)
 {
     if (index < 0 || index >= m_playlist->rowCount()) {
