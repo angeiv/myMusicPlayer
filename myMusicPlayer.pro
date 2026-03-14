@@ -17,13 +17,17 @@ SOURCES += main.cpp\
     about.cpp \
     login/login.cpp \
     mymusicplayer.cpp \
-    lrc/lrc.cpp
+    lrc/lrc.cpp \
+    playlistmodel.cpp \
+    playerengine.cpp
 
 HEADERS  += \
     about.h \
     login/login.h \
     mymusicplayer.h \
-    lrc/lrc.h
+    lrc/lrc.h \
+    playlistmodel.h \
+    playerengine.h
 
 FORMS    += \
     about.ui \
