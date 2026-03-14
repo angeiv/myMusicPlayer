@@ -200,16 +200,19 @@ ApplicationWindow {
 
         Rectangle {
             id: bottomBar
+            readonly property int pad: 10
+            readonly property int minHeight: 96
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            height: 76
+            height: Math.max(minHeight, bottomLayout.implicitHeight + pad * 2)
             color: panel
             border.color: border
 
             ColumnLayout {
+                id: bottomLayout
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: bottomBar.pad
                 spacing: 6
 
                 RowLayout {
