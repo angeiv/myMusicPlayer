@@ -416,14 +416,6 @@ bool PlayerEngine::ensureDecodedForPlayback()
         }
     });
 
-    connect(m_sink, &QAudioSink::errorChanged, this, [this](QAudio::Error error) {
-        if (error == QAudio::NoError) {
-            return;
-        }
-        m_lastError = tr("音频输出错误（%1）").arg(static_cast<int>(error));
-        emit errorMessageChanged();
-    });
-
     return true;
 }
 
