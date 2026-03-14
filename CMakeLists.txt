@@ -33,6 +33,10 @@ add_executable(myMusicPlayer
     musicplayer.qrc
 )
 
+if (WIN32)
+    set_target_properties(myMusicPlayer PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+
 target_link_libraries(myMusicPlayer PRIVATE
     Qt6::Core
     Qt6::Gui
@@ -42,4 +46,3 @@ target_link_libraries(myMusicPlayer PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
 )
-
