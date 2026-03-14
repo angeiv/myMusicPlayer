@@ -244,17 +244,50 @@ ApplicationWindow {
 
                     Item { Layout.fillWidth: true }
 
-                    ToolButton { text: "上一曲"; enabled: playlistView.count > 0; onClicked: player.previous() }
                     ToolButton {
-                        text: player.playing ? "暂停" : "播放"
+                        text: "⏮"
                         enabled: playlistView.count > 0
-                        onClicked: player.togglePlay()
+                        font.pixelSize: 18
+                        Layout.preferredWidth: 44
+                        Layout.preferredHeight: 34
+                        onClicked: player.previous()
+                        ToolTip.visible: hovered
+                        ToolTip.text: "上一曲"
                     }
-                    ToolButton { text: "下一曲"; enabled: playlistView.count > 0; onClicked: player.next() }
+
+                    ToolButton {
+                        text: player.playing ? "⏸" : "⏵"
+                        enabled: playlistView.count > 0
+                        font.pixelSize: 20
+                        Layout.preferredWidth: 50
+                        Layout.preferredHeight: 34
+                        onClicked: player.togglePlay()
+                        ToolTip.visible: hovered
+                        ToolTip.text: player.playing ? "暂停（Space）" : "播放（Space）"
+                    }
+
+                    ToolButton {
+                        text: "⏭"
+                        enabled: playlistView.count > 0
+                        font.pixelSize: 18
+                        Layout.preferredWidth: 44
+                        Layout.preferredHeight: 34
+                        onClicked: player.next()
+                        ToolTip.visible: hovered
+                        ToolTip.text: "下一曲"
+                    }
 
                     Item { Layout.fillWidth: true }
 
-                    ToolButton { text: player.muted ? "取消静音" : "静音"; onClicked: player.muted = !player.muted }
+                    ToolButton {
+                        text: player.muted ? "🔇" : "🔊"
+                        font.pixelSize: 18
+                        Layout.preferredWidth: 44
+                        Layout.preferredHeight: 34
+                        onClicked: player.muted = !player.muted
+                        ToolTip.visible: hovered
+                        ToolTip.text: player.muted ? "取消静音" : "静音"
+                    }
                     Slider {
                         Layout.preferredWidth: 150
                         from: 0
