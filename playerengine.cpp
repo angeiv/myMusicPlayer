@@ -6,12 +6,14 @@
 PlayerEngine::PlayerEngine(QObject *parent)
     : QObject(parent)
     , m_playlist(new PlaylistModel(this))
+    , m_lyrics(new LyricsModel(this))
     , m_audioOutput(new QAudioOutput(this))
 {
     m_player.setAudioOutput(m_audioOutput);
     setVolume(80);
 
-    connect(&m_player, &QMediaPlayer::positionChanged, this, [this] {
+    connect(&m_player, &QMediaPlayer::positionChanged, this, [this](qint64 position) {
+        m_lyrics->setPosition(position);
         emit positionChanged();
     });
 
@@ -46,6 +48,11 @@ PlayerEngine::PlayerEngine(QObject *parent)
 PlaylistModel *PlayerEngine::playlist() const
 {
     return m_playlist;
+}
+
+LyricsModel *PlayerEngine::lyrics() const
+{
+    return m_lyrics;
 }
 
 int PlayerEngine::currentIndex() const
@@ -206,6 +213,7 @@ void PlayerEngine::removeAt(int index)
     if (m_playlist->rowCount() == 0) {
         m_player.stop();
         m_player.setSource(QUrl());
+        m_lyrics->clear();
         m_currentIndex = -1;
         emit currentIndexChanged();
         emit currentTrackChanged();
@@ -228,6 +236,7 @@ void PlayerEngine::clear()
 {
     m_player.stop();
     m_player.setSource(QUrl());
+    m_lyrics->clear();
     m_playlist->clear();
     if (m_currentIndex != -1) {
         m_currentIndex = -1;
@@ -243,6 +252,7 @@ void PlayerEngine::applyCurrentSource(bool autoPlay)
         return;
     }
     m_player.setSource(url);
+    m_lyrics->loadForTrack(url);
     if (autoPlay) {
         m_player.play();
     }
@@ -293,4 +303,3 @@ void PlayerEngine::playPreviousInternal()
     }
     m_player.play();
 }
-

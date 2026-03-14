@@ -18,6 +18,7 @@ SOURCES += main.cpp\
     login/login.cpp \
     mymusicplayer.cpp \
     lrc/lrc.cpp \
+    lyricsmodel.cpp \
     playlistmodel.cpp \
     playerengine.cpp
 
@@ -26,6 +27,7 @@ HEADERS  += \
     login/login.h \
     mymusicplayer.h \
     lrc/lrc.h \
+    lyricsmodel.h \
     playlistmodel.h \
     playerengine.h
 

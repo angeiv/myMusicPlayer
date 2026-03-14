@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lyricsmodel.h"
 #include "playlistmodel.h"
 
 #include <QMediaPlayer>
@@ -12,6 +13,7 @@ class PlayerEngine final : public QObject
     Q_OBJECT
 
     Q_PROPERTY(PlaylistModel* playlist READ playlist CONSTANT)
+    Q_PROPERTY(LyricsModel* lyrics READ lyrics CONSTANT)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
     Q_PROPERTY(QString currentTitle READ currentTitle NOTIFY currentTrackChanged)
     Q_PROPERTY(QString currentArtist READ currentArtist NOTIFY currentTrackChanged)
@@ -37,6 +39,7 @@ public:
     explicit PlayerEngine(QObject *parent = nullptr);
 
     PlaylistModel *playlist() const;
+    LyricsModel *lyrics() const;
 
     int currentIndex() const;
     void setCurrentIndex(int index);
@@ -88,6 +91,7 @@ private:
     void playPreviousInternal();
 
     PlaylistModel *m_playlist = nullptr;
+    LyricsModel *m_lyrics = nullptr;
     QMediaPlayer m_player;
     QAudioOutput *m_audioOutput = nullptr;
 
@@ -97,4 +101,3 @@ private:
 
     QString m_lastError;
 };
-
