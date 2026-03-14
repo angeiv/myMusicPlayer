@@ -3,10 +3,12 @@
 #include "lyricsmodel.h"
 #include "playlistmodel.h"
 
-#include <QMediaPlayer>
+#include <QAudioFormat>
+#include <QBuffer>
 #include <QObject>
+#include <QTimer>
 
-class QAudioOutput;
+class QAudioSink;
 
 class PlayerEngine final : public QObject
 {
@@ -90,15 +92,30 @@ private:
     void applyCurrentSource(bool autoPlay);
     void playNextInternal();
     void playPreviousInternal();
+    bool ensureDecodedForPlayback();
+    void stopPlayback();
+    void resetPlaybackData();
+    void startOrResume();
+    void updatePositionTick(bool forceEmit);
+    void applyOutputVolume();
+    int bytesPerSample() const;
+    int bytesPerFrame() const;
 
     PlaylistModel *m_playlist = nullptr;
     LyricsModel *m_lyrics = nullptr;
-    QMediaPlayer m_player;
-    QAudioOutput *m_audioOutput = nullptr;
+    QAudioSink *m_sink = nullptr;
+    QAudioFormat m_format;
+    QByteArray m_pcm;
+    QBuffer m_pcmBuffer;
+    QTimer m_positionTimer;
 
     int m_currentIndex = -1;
     qint64 m_duration = 0;
+    qint64 m_lastPositionMs = -1;
     PlaybackMode m_playbackMode = PlaybackMode::Sequential;
+
+    int m_volume = 80;
+    bool m_muted = false;
 
     QString m_lastError;
 };

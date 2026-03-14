@@ -1,44 +1,23 @@
 #include "playerengine.h"
 
-#include <QAudioOutput>
+#include "audiodecoder.h"
+
+#include <QAudioDevice>
+#include <QAudio>
+#include <QAudioSink>
+#include <QMediaDevices>
 #include <QRandomGenerator>
+#include <QMetaObject>
+#include <QtMath>
 
 PlayerEngine::PlayerEngine(QObject *parent)
     : QObject(parent)
     , m_playlist(new PlaylistModel(this))
     , m_lyrics(new LyricsModel(this))
-    , m_audioOutput(new QAudioOutput(this))
 {
-    m_player.setAudioOutput(m_audioOutput);
-    setVolume(80);
-
-    connect(&m_player, &QMediaPlayer::positionChanged, this, [this](qint64 position) {
-        m_lyrics->setPosition(position);
-        emit positionChanged();
-    });
-
-    connect(&m_player, &QMediaPlayer::durationChanged, this, [this](qint64 duration) {
-        if (m_duration == duration) {
-            return;
-        }
-        m_duration = duration;
-        emit durationChanged();
-    });
-
-    connect(&m_player, &QMediaPlayer::playbackStateChanged, this, [this] {
-        emit playingChanged();
-    });
-
-    connect(&m_player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
-        if (status == QMediaPlayer::EndOfMedia) {
-            playNextInternal();
-        }
-    });
-
-    connect(&m_player, &QMediaPlayer::errorOccurred, this, [this](QMediaPlayer::Error, const QString &errorString) {
-        m_lastError = errorString;
-        emit errorMessageChanged();
-    });
+    m_pcmBuffer.setBuffer(&m_pcm);
+    m_positionTimer.setInterval(150);
+    connect(&m_positionTimer, &QTimer::timeout, this, [this] { updatePositionTick(false); });
 
     if (m_playlist->rowCount() > 0) {
         setCurrentIndex(0);
@@ -89,15 +68,52 @@ QString PlayerEngine::currentArtist() const
 
 qint64 PlayerEngine::position() const
 {
-    return m_player.position();
+    if (m_pcm.isEmpty() || m_format.sampleRate() <= 0) {
+        return 0;
+    }
+    const int bpf = bytesPerFrame();
+    if (bpf <= 0) {
+        return 0;
+    }
+
+    const qint64 bytePos = m_pcmBuffer.isOpen() ? m_pcmBuffer.pos() : 0;
+    const qint64 framePos = bytePos / static_cast<qint64>(bpf);
+    return (framePos * 1000) / static_cast<qint64>(m_format.sampleRate());
 }
 
 void PlayerEngine::setPosition(qint64 position)
 {
-    if (qAbs(m_player.position() - position) <= 50) {
+    if (m_pcm.isEmpty() || m_format.sampleRate() <= 0) {
         return;
     }
-    m_player.setPosition(position);
+
+    const qint64 pos = qBound<qint64>(0, position, m_duration);
+    if (qAbs(this->position() - pos) <= 50) {
+        return;
+    }
+
+    const int bpf = bytesPerFrame();
+    if (bpf <= 0) {
+        return;
+    }
+
+    const bool wasPlaying = playing();
+    if (m_sink) {
+        m_sink->stop();
+    }
+
+    const qint64 framePos = (pos * static_cast<qint64>(m_format.sampleRate())) / 1000;
+    const qint64 bytePos = qBound<qint64>(0, framePos * static_cast<qint64>(bpf), m_pcm.size());
+
+    if (!m_pcmBuffer.isOpen()) {
+        m_pcmBuffer.open(QIODevice::ReadOnly);
+    }
+    m_pcmBuffer.seek(bytePos);
+    updatePositionTick(true);
+
+    if (wasPlaying) {
+        startOrResume();
+    }
 }
 
 qint64 PlayerEngine::duration() const
@@ -107,36 +123,37 @@ qint64 PlayerEngine::duration() const
 
 bool PlayerEngine::playing() const
 {
-    return m_player.playbackState() == QMediaPlayer::PlayingState;
+    return m_sink && m_sink->state() == QAudio::ActiveState;
 }
 
 int PlayerEngine::volume() const
 {
-    return qRound(m_audioOutput->volume() * 100.0f);
+    return m_volume;
 }
 
 void PlayerEngine::setVolume(int volume)
 {
     const int v = qBound(0, volume, 100);
-    const float normalized = static_cast<float>(v) / 100.0f;
-    if (qFuzzyCompare(m_audioOutput->volume(), normalized)) {
+    if (m_volume == v) {
         return;
     }
-    m_audioOutput->setVolume(normalized);
+    m_volume = v;
+    applyOutputVolume();
     emit volumeChanged();
 }
 
 bool PlayerEngine::muted() const
 {
-    return m_audioOutput->isMuted();
+    return m_muted;
 }
 
 void PlayerEngine::setMuted(bool muted)
 {
-    if (m_audioOutput->isMuted() == muted) {
+    if (m_muted == muted) {
         return;
     }
-    m_audioOutput->setMuted(muted);
+    m_muted = muted;
+    applyOutputVolume();
     emit mutedChanged();
 }
 
@@ -171,15 +188,21 @@ void PlayerEngine::play()
     if (m_currentIndex < 0) {
         setCurrentIndex(0);
     }
-    if (m_player.source().isEmpty()) {
-        applyCurrentSource(false);
+    if (!ensureDecodedForPlayback()) {
+        return;
     }
-    m_player.play();
+
+    startOrResume();
 }
 
 void PlayerEngine::pause()
 {
-    m_player.pause();
+    if (!m_sink) {
+        return;
+    }
+    m_sink->suspend();
+    m_positionTimer.stop();
+    updatePositionTick(true);
 }
 
 void PlayerEngine::next()
@@ -229,8 +252,8 @@ void PlayerEngine::removeAt(int index)
     m_playlist->removeAt(index);
 
     if (m_playlist->rowCount() == 0) {
-        m_player.stop();
-        m_player.setSource(QUrl());
+        stopPlayback();
+        resetPlaybackData();
         m_lyrics->clear();
         m_currentIndex = -1;
         emit currentIndexChanged();
@@ -252,8 +275,8 @@ void PlayerEngine::removeAt(int index)
 
 void PlayerEngine::clear()
 {
-    m_player.stop();
-    m_player.setSource(QUrl());
+    stopPlayback();
+    resetPlaybackData();
     m_lyrics->clear();
     m_playlist->clear();
     if (m_currentIndex != -1) {
@@ -269,10 +292,15 @@ void PlayerEngine::applyCurrentSource(bool autoPlay)
     if (url.isEmpty()) {
         return;
     }
-    m_player.setSource(url);
+
+    stopPlayback();
+    resetPlaybackData();
     m_lyrics->loadForTrack(url);
+
     if (autoPlay) {
-        m_player.play();
+        play();
+    } else {
+        updatePositionTick(true);
     }
 }
 
@@ -286,22 +314,22 @@ void PlayerEngine::playNextInternal()
     case PlaybackMode::Sequential:
         if (m_currentIndex < m_playlist->rowCount() - 1) {
             setCurrentIndex(m_currentIndex + 1);
-            m_player.play();
+            play();
         } else {
-            m_player.stop();
+            stopPlayback();
         }
         break;
     case PlaybackMode::Loop:
         setCurrentIndex((m_currentIndex + 1) % m_playlist->rowCount());
-        m_player.play();
+        play();
         break;
     case PlaybackMode::Random:
         setCurrentIndex(QRandomGenerator::global()->bounded(m_playlist->rowCount()));
-        m_player.play();
+        play();
         break;
     case PlaybackMode::CurrentItemInLoop:
-        m_player.setPosition(0);
-        m_player.play();
+        setPosition(0);
+        play();
         break;
     }
 }
@@ -319,5 +347,191 @@ void PlayerEngine::playPreviousInternal()
     } else {
         setCurrentIndex(0);
     }
-    m_player.play();
+    play();
+}
+
+bool PlayerEngine::ensureDecodedForPlayback()
+{
+    if (!m_pcm.isEmpty() && m_sink) {
+        return true;
+    }
+
+    const auto url = m_playlist->urlAt(m_currentIndex);
+    if (!url.isLocalFile()) {
+        m_lastError = tr("仅支持本地文件");
+        emit errorMessageChanged();
+        return false;
+    }
+
+    const QAudioDevice device = QMediaDevices::defaultAudioOutput();
+    DecodedAudio decoded;
+    QString err;
+    if (!decodeAudioFileForDevice(url.toLocalFile(), device, &decoded, &err)) {
+        m_lastError = err.isEmpty() ? tr("解码失败") : err;
+        emit errorMessageChanged();
+        return false;
+    }
+
+    m_format = decoded.format;
+    m_pcm = std::move(decoded.pcm);
+
+    if (m_duration != decoded.durationMs) {
+        m_duration = decoded.durationMs;
+        emit durationChanged();
+    }
+
+    m_pcmBuffer.close();
+    m_pcmBuffer.open(QIODevice::ReadOnly);
+    m_pcmBuffer.seek(0);
+    m_lastPositionMs = -1;
+    emit positionChanged();
+
+    if (m_sink) {
+        m_sink->stop();
+        delete m_sink;
+        m_sink = nullptr;
+    }
+
+    m_sink = new QAudioSink(device, m_format, this);
+    applyOutputVolume();
+
+    connect(m_sink, &QAudioSink::stateChanged, this, [this](QAudio::State state) {
+        emit playingChanged();
+
+        if (state == QAudio::ActiveState) {
+            if (!m_positionTimer.isActive()) {
+                m_positionTimer.start();
+            }
+        } else {
+            if (m_positionTimer.isActive()) {
+                m_positionTimer.stop();
+            }
+            updatePositionTick(true);
+        }
+
+        if (state == QAudio::IdleState) {
+            if (m_pcmBuffer.pos() >= m_pcm.size() && m_pcm.size() > 0) {
+                QMetaObject::invokeMethod(this, [this] { playNextInternal(); }, Qt::QueuedConnection);
+            }
+        }
+    });
+
+    connect(m_sink, &QAudioSink::errorChanged, this, [this](QAudio::Error error) {
+        if (error == QAudio::NoError) {
+            return;
+        }
+        m_lastError = tr("音频输出错误（%1）").arg(static_cast<int>(error));
+        emit errorMessageChanged();
+    });
+
+    return true;
+}
+
+void PlayerEngine::stopPlayback()
+{
+    if (m_sink) {
+        m_sink->stop();
+    }
+    if (m_positionTimer.isActive()) {
+        m_positionTimer.stop();
+    }
+    emit playingChanged();
+}
+
+void PlayerEngine::resetPlaybackData()
+{
+    if (m_sink) {
+        m_sink->stop();
+        delete m_sink;
+        m_sink = nullptr;
+    }
+    if (m_pcmBuffer.isOpen()) {
+        m_pcmBuffer.close();
+    }
+    m_pcm.clear();
+    m_format = {};
+
+    if (m_duration != 0) {
+        m_duration = 0;
+        emit durationChanged();
+    }
+
+    m_lastPositionMs = -1;
+    emit positionChanged();
+    emit playingChanged();
+}
+
+void PlayerEngine::startOrResume()
+{
+    if (!m_sink) {
+        return;
+    }
+    if (!m_pcmBuffer.isOpen()) {
+        m_pcmBuffer.open(QIODevice::ReadOnly);
+    }
+
+    if (m_pcmBuffer.pos() >= m_pcm.size() && m_pcm.size() > 0) {
+        m_pcmBuffer.seek(0);
+    }
+
+    switch (m_sink->state()) {
+    case QAudio::ActiveState:
+        break;
+    case QAudio::SuspendedState:
+        m_sink->resume();
+        break;
+    default:
+        m_sink->start(&m_pcmBuffer);
+        break;
+    }
+
+    if (!m_positionTimer.isActive()) {
+        m_positionTimer.start();
+    }
+    updatePositionTick(true);
+}
+
+void PlayerEngine::updatePositionTick(bool forceEmit)
+{
+    const qint64 pos = position();
+    m_lyrics->setPosition(pos);
+
+    if (forceEmit || m_lastPositionMs < 0 || qAbs(pos - m_lastPositionMs) >= 50) {
+        m_lastPositionMs = pos;
+        emit positionChanged();
+    }
+}
+
+void PlayerEngine::applyOutputVolume()
+{
+    if (!m_sink) {
+        return;
+    }
+
+    if (m_muted) {
+        m_sink->setVolume(0.0);
+        return;
+    }
+    m_sink->setVolume(static_cast<qreal>(m_volume) / 100.0);
+}
+
+int PlayerEngine::bytesPerSample() const
+{
+    switch (m_format.sampleFormat()) {
+    case QAudioFormat::Int16:
+        return 2;
+    case QAudioFormat::Float:
+        return 4;
+    default:
+        return 0;
+    }
+}
+
+int PlayerEngine::bytesPerFrame() const
+{
+    const int bps = bytesPerSample();
+    if (bps <= 0 || m_format.channelCount() <= 0) {
+        return 0;
+    }
+    return bps * m_format.channelCount();
 }

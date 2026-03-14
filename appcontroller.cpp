@@ -24,7 +24,7 @@ void AppController::pickAndAddFiles()
         nullptr,
         tr("打开音乐文件"),
         QString(),
-        tr("音频文件(*.mp3 *.flac *.wav *.wma *.wmv);;全部文件(*.*)"));
+        tr("音频文件(*.mp3 *.flac *.wav);;全部文件(*.*)"));
 
     m_player->addFilesAndPlay(files);
 }
@@ -35,7 +35,7 @@ void AppController::addDroppedUrls(const QVariantList &urls)
         return;
     }
 
-    const QStringList nameFilters = {"*.mp3", "*.flac", "*.wav", "*.wma", "*.m4a", "*.aac", "*.ogg"};
+    const QStringList nameFilters = {"*.mp3", "*.flac", "*.wav"};
 
     QStringList filePaths;
     filePaths.reserve(urls.size());
