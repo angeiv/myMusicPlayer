@@ -24,6 +24,7 @@ Makefile*
 # QtCreator
 
 *.autosave
+.codex-home/
 
 # =========================
 # Operating System Files
