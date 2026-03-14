@@ -24,6 +24,9 @@ add_executable(myMusicPlayer
     main.cpp
     appcontroller.cpp
     appcontroller.h
+    audiodecoder.cpp
+    audiodecoder.h
+    dr_libs_impl.cpp
     lyricsmodel.cpp
     lyricsmodel.h
     playlistmodel.cpp
@@ -31,6 +34,10 @@ add_executable(myMusicPlayer
     playerengine.cpp
     playerengine.h
     musicplayer.qrc
+)
+
+target_include_directories(myMusicPlayer PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 if (WIN32)
