@@ -12,5 +12,13 @@ myMusicPlayer
 - 歌词：支持 `.lrc`，按播放进度同步显示（查找顺序：同目录 → `<appDir>/lrc/` → `./lrc/`）
 
 ## 构建
-- 依赖：Qt 6（需要 Qt Multimedia、Qt Quick、Qt Quick Controls 2）
-- 使用 qmake：`qmake myMusicPlayer.pro` 后再执行构建工具（Windows 常用 `mingw32-make`）
+- 依赖：Qt 6（需要 Qt Multimedia、Qt Quick、Qt Quick Controls 2、Qt Widgets）
+
+### CMake（推荐）
+- 生成：`cmake -S . -B build`
+- 编译：`cmake --build build --config Release`
+
+> Windows 上如果找不到 Qt，可通过 `-DCMAKE_PREFIX_PATH=<Qt6>/lib/cmake` 或设置 `Qt6_DIR` 指向 Qt 的 CMake 包目录。
+
+### qmake（兼容）
+- `qmake myMusicPlayer.pro` 后再执行构建工具（Windows 常用 `mingw32-make`）
