@@ -79,6 +79,7 @@ ApplicationWindow {
     Rectangle {
         anchors.fill: parent
         visible: dragOverlayVisible
+        enabled: false
         z: 999
         color: "#00000080"
 
@@ -134,63 +135,141 @@ ApplicationWindow {
         MenuItem { text: "退出"; onTriggered: Qt.quit() }
     }
 
-    header: ToolBar {
-        background: Rectangle {
+    Item {
+        id: layoutRoot
+        anchors.fill: parent
+
+        ToolBar {
+            id: topBar
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+
+            background: Rectangle {
+                color: panel
+                border.color: border
+            }
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 10
+
+                Image {
+                    source: "qrc:/resources/img/headphones.png"
+                    width: 22
+                    height: 22
+                    fillMode: Image.PreserveAspectFit
+                }
+
+                Label {
+                    text: "音乐魔盒"
+                    font.pixelSize: 16
+                    font.bold: true
+                }
+
+                TextField {
+                    id: searchField
+                    Layout.fillWidth: true
+                    placeholderText: "搜索歌曲或歌手（Ctrl+F）"
+                    text: filterText
+                    onTextChanged: filterText = text
+                }
+
+                ToolButton {
+                    text: "添加"
+                    onClicked: app.pickAndAddFiles()
+                }
+
+                ToolButton {
+                    text: playbackModeLabel(player.playbackMode)
+                    onClicked: {
+                        const nextMode = (player.playbackMode + 1) % 4
+                        player.playbackMode = nextMode
+                    }
+                    ToolTip.visible: hovered
+                    ToolTip.text: "播放模式：" + playbackModeLabel(player.playbackMode)
+                }
+
+                ToolButton {
+                    text: "菜单"
+                    onClicked: mainMenu.popup()
+                }
+            }
+        }
+
+        Rectangle {
+            id: bottomBar
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 76
             color: panel
             border.color: border
-        }
 
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 10
-            spacing: 10
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 6
 
-            Image {
-                source: "qrc:/resources/img/headphones.png"
-                width: 22
-                height: 22
-                fillMode: Image.PreserveAspectFit
-            }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
 
-            Label {
-                text: "音乐魔盒"
-                font.pixelSize: 16
-                font.bold: true
-            }
-
-            TextField {
-                id: searchField
-                Layout.fillWidth: true
-                placeholderText: "搜索歌曲或歌手（Ctrl+F）"
-                text: filterText
-                onTextChanged: filterText = text
-            }
-
-            ToolButton {
-                text: "添加"
-                onClicked: app.pickAndAddFiles()
-            }
-
-            ToolButton {
-                text: playbackModeLabel(player.playbackMode)
-                onClicked: {
-                    const nextMode = (player.playbackMode + 1) % 4
-                    player.playbackMode = nextMode
+                    Label { text: formatTime(player.position); color: textMuted }
+                    Slider {
+                        id: progress
+                        Layout.fillWidth: true
+                        from: 0
+                        to: Math.max(1, player.duration)
+                        value: player.position
+                        onMoved: player.position = value
+                    }
+                    Label { text: formatTime(player.duration); color: textMuted }
                 }
-                ToolTip.visible: hovered
-                ToolTip.text: "播放模式：" + playbackModeLabel(player.playbackMode)
-            }
 
-            ToolButton {
-                text: "菜单"
-                onClicked: mainMenu.popup()
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Label {
+                        text: player.currentTitle.length ? (player.currentTitle + " - " + player.currentArtist) : ""
+                        elide: Text.ElideRight
+                        color: Material.foreground
+                        Layout.preferredWidth: 340
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    ToolButton { text: "上一曲"; enabled: playlistView.count > 0; onClicked: player.previous() }
+                    ToolButton {
+                        text: player.playing ? "暂停" : "播放"
+                        enabled: playlistView.count > 0
+                        onClicked: player.togglePlay()
+                    }
+                    ToolButton { text: "下一曲"; enabled: playlistView.count > 0; onClicked: player.next() }
+
+                    Item { Layout.fillWidth: true }
+
+                    ToolButton { text: player.muted ? "取消静音" : "静音"; onClicked: player.muted = !player.muted }
+                    Slider {
+                        Layout.preferredWidth: 150
+                        from: 0
+                        to: 100
+                        value: player.volume
+                        onMoved: player.volume = value
+                    }
+                }
             }
         }
-    }
 
-    SplitView {
-        anchors.fill: parent
-        orientation: Qt.Horizontal
+        SplitView {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: topBar.bottom
+            anchors.bottom: bottomBar.top
+            clip: true
+            orientation: Qt.Horizontal
 
         Pane {
             id: sidebar
@@ -381,14 +460,6 @@ ApplicationWindow {
                                 Layout.fillWidth: true
                                 spacing: 10
 
-                                ToolButton { text: "上一曲"; enabled: playlistView.count > 0; onClicked: player.previous() }
-                                ToolButton {
-                                    text: player.playing ? "暂停" : "播放"
-                                    enabled: playlistView.count > 0
-                                    onClicked: player.togglePlay()
-                                }
-                                ToolButton { text: "下一曲"; enabled: playlistView.count > 0; onClicked: player.next() }
-
                                 Item { Layout.fillWidth: true }
 
                                 Label {
@@ -459,65 +530,6 @@ ApplicationWindow {
                 }
             }
         }
-    }
-
-    footer: Rectangle {
-        height: 96
-        color: panel
-        border.color: border
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 12
-            spacing: 8
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 12
-
-                Label { text: formatTime(player.position); color: textMuted }
-                Slider {
-                    id: progress
-                    Layout.fillWidth: true
-                    from: 0
-                    to: Math.max(1, player.duration)
-                    value: player.position
-                    onMoved: player.position = value
-                }
-                Label { text: formatTime(player.duration); color: textMuted }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-
-                Label {
-                    text: player.currentTitle.length ? (player.currentTitle + " - " + player.currentArtist) : ""
-                    elide: Text.ElideRight
-                    Layout.preferredWidth: 320
-                }
-
-                Item { Layout.fillWidth: true }
-
-                ToolButton { text: "上一曲"; enabled: playlistView.count > 0; onClicked: player.previous() }
-                ToolButton {
-                    text: player.playing ? "暂停" : "播放"
-                    enabled: playlistView.count > 0
-                    onClicked: player.togglePlay()
-                }
-                ToolButton { text: "下一曲"; enabled: playlistView.count > 0; onClicked: player.next() }
-
-                Item { Layout.fillWidth: true }
-
-                ToolButton { text: player.muted ? "取消静音" : "静音"; onClicked: player.muted = !player.muted }
-                Slider {
-                    Layout.preferredWidth: 160
-                    from: 0
-                    to: 100
-                    value: player.volume
-                    onMoved: player.volume = value
-                }
-            }
         }
     }
 
@@ -605,4 +617,3 @@ ApplicationWindow {
         }
     }
 }
-
