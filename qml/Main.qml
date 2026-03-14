@@ -144,6 +144,8 @@ ApplicationWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
+            implicitHeight: 56
+            clip: true
 
             background: Rectangle {
                 color: panel
@@ -151,7 +153,9 @@ ApplicationWindow {
             }
 
             RowLayout {
-                anchors.fill: parent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
                 anchors.margins: 10
                 spacing: 10
 
@@ -160,17 +164,21 @@ ApplicationWindow {
                     width: 22
                     height: 22
                     fillMode: Image.PreserveAspectFit
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 Label {
                     text: "音乐魔盒"
                     font.pixelSize: 16
                     font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 TextField {
                     id: searchField
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 36
+                    Layout.alignment: Qt.AlignVCenter
                     placeholderText: "搜索歌曲或歌手（Ctrl+F）"
                     text: filterText
                     onTextChanged: filterText = text
@@ -178,11 +186,13 @@ ApplicationWindow {
 
                 ToolButton {
                     text: "添加"
+                    Layout.alignment: Qt.AlignVCenter
                     onClicked: app.pickAndAddFiles()
                 }
 
                 ToolButton {
                     text: playbackModeLabel(player.playbackMode)
+                    Layout.alignment: Qt.AlignVCenter
                     onClicked: {
                         const nextMode = (player.playbackMode + 1) % 4
                         player.playbackMode = nextMode
@@ -193,6 +203,7 @@ ApplicationWindow {
 
                 ToolButton {
                     text: "菜单"
+                    Layout.alignment: Qt.AlignVCenter
                     onClicked: mainMenu.popup()
                 }
             }
