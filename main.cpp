@@ -8,6 +8,7 @@
 #include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickStyle>
 #include <QTranslator>
 
 #include "appcontroller.h"
@@ -15,6 +16,8 @@
 
 int main(int argc, char *argv[])
 {
+    QQuickStyle::setStyle("Material");
+
     //创建QApplication对象，管理整个应用程序的资源，通过argc和argv来获取它自己的命令行参数；
     QApplication app(argc, argv);
 
