@@ -219,7 +219,7 @@ QString LyricsModel::decodeTextFile(const QString &filePath)
     }
 
     {
-        QStringDecoder decoder(QStringDecoder::Gb18030);
+        QStringDecoder decoder(QStringDecoder::System);
         const QString text = decoder.decode(bytes);
         if (!decoder.hasError()) {
             return text;
@@ -300,4 +300,3 @@ void LyricsModel::setCurrentIndexInternal(int index)
     emit currentIndexChanged();
     emit currentTextChanged();
 }
-

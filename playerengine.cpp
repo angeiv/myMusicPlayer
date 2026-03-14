@@ -112,13 +112,13 @@ bool PlayerEngine::playing() const
 
 int PlayerEngine::volume() const
 {
-    return qRound(m_audioOutput->volume() * 100.0);
+    return qRound(m_audioOutput->volume() * 100.0f);
 }
 
 void PlayerEngine::setVolume(int volume)
 {
     const int v = qBound(0, volume, 100);
-    const qreal normalized = static_cast<qreal>(v) / 100.0;
+    const float normalized = static_cast<float>(v) / 100.0f;
     if (qFuzzyCompare(m_audioOutput->volume(), normalized)) {
         return;
     }

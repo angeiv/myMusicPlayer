@@ -172,7 +172,6 @@ bool PlaylistModel::load()
 bool PlaylistModel::save() const
 {
     QJsonArray arr;
-    arr.reserve(m_tracks.size());
     for (const auto &track : m_tracks) {
         if (track.url.isLocalFile()) {
             arr.append(track.url.toLocalFile());
@@ -227,4 +226,3 @@ void PlaylistModel::rebuildFromFilePaths(const QStringList &filePaths)
     }
     endResetModel();
 }
-
