@@ -1,38 +1,43 @@
-﻿//添加跨编译器的代码
-#if _MSC_VER >= 1600
-#pragma execution_character_set("utf-8")
-#endif
-
 #include "mymusicplayer.h"
+#include "theme.h"
+
 #include <QApplication>
+#include <QGuiApplication>
+#include <QPoint>
+#include <QRect>
 #include <QScreen>
-
-
-#include "QTranslator"
+#include <QTranslator>
 
 int main(int argc, char *argv[])
 {
-    //创建QApplication对象，管理整个应用程序的资源，通过argc和argv来获取它自己的命令行参数；
-    QApplication a(argc, argv);
+    // 高分屏按真实像素绘制，避免图标发虚（Qt 6 默认即 PassThrough，这里显式声明）
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
+        Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 
-    //加载Qt中的资源文件，使Qt显示中文（包括QMessageBox、文本框右键菜单等）
-    QTranslator translator;
-    if (!translator.load(":/resources/translations/qt_zh_CN.qm")) {
-        qWarning() << "无法加载翻译文件";
-        // 可以在这里添加额外的错误处理逻辑
+    QApplication app(argc, argv);
+    QApplication::setOrganizationName(QStringLiteral("MusicBox"));
+    QApplication::setApplicationName(QStringLiteral("音乐魔盒"));
+    QApplication::setApplicationVersion(QStringLiteral("1.0.0"));
+
+    // Fusion 是唯一能被 QSS 完整接管的跨平台基础样式，必须在创建窗口前设置
+    Theme::applyApplicationTheme();
+
+    // 系统自带对话框/菜单的中文翻译
+    static QTranslator qtTranslator;
+    if (qtTranslator.load(QStringLiteral(":/resources/translations/qt_zh_CN.qm")))
+        QApplication::installTranslator(&qtTranslator);
+    else
+        qWarning("无法加载 qt_zh_CN.qm，Qt 自带对话框将使用英文");
+
+    myMusicPlayer player;
+    player.show();
+
+    // 在屏幕可用区域内居中；窗口大于屏幕时自动夹紧
+    if (const QScreen *screen = QApplication::primaryScreen()) {
+        const QRect available = screen->availableGeometry();
+        player.resize(player.size().boundedTo(available.size() - QSize(40, 40)));
+        player.move(available.center() - QPoint(player.width() / 2, player.height() / 2));
     }
-    a.installTranslator(&translator);
 
-//    MainWindow w;
-//    w.show();
-//如何关闭主窗口的同时关闭所有的窗口？
-
-
-    myMusicPlayer *mp = new myMusicPlayer();
-    //把窗口居中显示
-    QScreen *screen = QApplication::primaryScreen();
-    mp->move((screen->geometry().width() - mp->width())/2, (screen->geometry().height() - mp->height())/2);
-    mp->show();
-
-    return a.exec();
+    return QApplication::exec();
 }

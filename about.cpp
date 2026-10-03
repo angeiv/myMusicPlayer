@@ -1,14 +1,26 @@
 #include "about.h"
 #include "ui_about.h"
-#include "QDesktopServices"
+#include "theme.h"
 
-About::About(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::About)
+#include <QLabel>
+
+About::About(QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::About)
 {
     ui->setupUi(this);
-    this->setWindowFlags(Qt::CustomizeWindowHint|Qt::WindowCloseButtonHint);//去除问号按钮
-    connect(ui->labelPage, SIGNAL(linkActivated(QString)), this, SLOT(openUrl(QString)));
+
+    setObjectName(QStringLiteral("aboutDialog"));
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+    setStyleSheet(Theme::styleSheet());
+
+    if (QLabel *logo = ui->labelLogo) {
+        const QPixmap pixmap = logo->pixmap();
+        if (!pixmap.isNull()) {
+            logo->setPixmap(pixmap.scaled(logo->size(), Qt::KeepAspectRatio,
+                                          Qt::SmoothTransformation));
+        }
+    }
 }
 
 About::~About()
@@ -16,12 +28,8 @@ About::~About()
     delete ui;
 }
 
-void About::on_labelPage_linkActivated(const QString )
+void About::on_labelPage_linkActivated(const QString &)
 {
-    this->ui->labelPage->setOpenExternalLinks(true);
-}
-
-void About::openUrl(QString url)
-{
-    QDesktopServices::openUrl(QUrl(url));
+    // 交由系统默认浏览器打开，不在 QLabel 内部渲染
+    ui->labelPage->setOpenExternalLinks(true);
 }
