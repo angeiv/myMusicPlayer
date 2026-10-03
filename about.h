@@ -7,21 +7,21 @@ namespace Ui {
 class About;
 }
 
+/// 「关于音乐魔盒」对话框。
 class About : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit About(QWidget *parent = 0);
-    ~About();
+    explicit About(QWidget *parent = nullptr);
+    ~About() override;
 
 private slots:
-    void on_labelPage_linkActivated(const QString);
-
-    void openUrl(QString url);
+    /// 由 setupUi 自动连接：处理富文本中的超链接。
+    void on_labelPage_linkActivated(const QString &link);
 
 private:
-    Ui::About *ui;
+    Ui::About *ui = nullptr;
 };
 
 #endif // ABOUT_H

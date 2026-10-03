@@ -1,110 +1,156 @@
-﻿#ifndef MYMUSICPLAYER_H
+#ifndef MYMUSICPLAYER_H
 #define MYMUSICPLAYER_H
 
+#include <QList>
+#include <QUrl>
 #include <QWidget>
-#include <QMediaPlayer>
-#include <QMenuBar>
-#include <QTextEdit>
-#include <QTableWidget>
-#include <QTableWidgetItem>
-#include <QPushButton>
-#include <QSlider>
-#include <QLabel>
+
 #include <lrc/lrc.h>
-#include <QAudioOutput>
+
+class QAction;
+class QAudioOutput;
+class QCloseEvent;
+class QHBoxLayout;
+class QLabel;
+class QMediaPlayer;
+class QMenu;
+class QMenuBar;
+class QPushButton;
+class QSlider;
+class QTableWidget;
+class QVBoxLayout;
 
 namespace Ui {
 class myMusicPlayer;
 }
 
+/*!
+ * \brief 播放模式。枚举值与 Icons::playbackModeIcon() 的参数一一对应。
+ */
 enum class PlaybackMode {
-    Sequential,
-    Loop,
-    Random,
-    CurrentItemInLoop
+    Sequential = 0,       ///< 顺序播放：播完最后一首即停止
+    Loop = 1,             ///< 列表循环
+    Random = 2,           ///< 随机播放
+    CurrentItemInLoop = 3 ///< 单曲循环
 };
 
+/*!
+ * \brief 主窗口：音乐魔盒。
+ *
+ * 界面完全由布局管理（不再使用 setGeometry 绝对定位），窗口可自由缩放。
+ *
+ * 最低 Qt 版本：6.12 LTS（由 myMusicPlayer.pro 的版本断言强制）。
+ * 代码用到的较新 API：
+ *  - QMediaPlayer::setAudioOutput / playbackStateChanged / errorOccurred：Qt 6.2
+ *  - QAudioOutput、QRandomGenerator、QTextStream(UTF-8 默认)：Qt 6.0
+ */
 class myMusicPlayer : public QWidget
 {
     Q_OBJECT
 
 public:
-    myMusicPlayer(QWidget *parent = 0);
-    void initWindow();
-    ~myMusicPlayer();
+    explicit myMusicPlayer(QWidget *parent = nullptr);
+    ~myMusicPlayer() override;
+
+    void initWindow();       ///< 构建全部控件与布局
+    void initConnections();  ///< 建立信号槽连接
 
 public slots:
-    void openFile();
+    void openFile();         ///< 打开单个音乐文件并播放
+    void addsong();          ///< 批量添加音乐到列表
+    void cutsong();          ///< 从列表删除选中歌曲
     void aboutWindow();
-    void addsong();
-    void cutsong();
     void loginWindow();
-
-private:
-    Ui::myMusicPlayer *ui;
-    QMenuBar *menu;//菜单栏
-    QMenu *menuOpen;//打开
-    QAction *actionNew;//打开音乐
-    QMenu *menuList;//列表
-    QAction *actionList;//本地列表
-    QMenu *menuLogin;
-    QAction *actionLogin;
-    QMenu *menuAbout;//关于
-    QAction *actionAbout;//关于音乐魔盒
-    QLabel *title;//歌曲名
-    QLabel *author;//歌手
-
-    QTableWidget *tableList;//歌曲列表
-    QPushButton *btnForward;//上一曲
-    QPushButton *btnPlayPause;//播放暂停
-    QPushButton *btnBackword;//下一曲
-    QSlider *progressBar;//歌曲进度条
-    QLabel *timeProgress;//歌曲播放进度时间
-    QLabel *volumeShow;//音量
-    QSlider *volumeControl;//音量控制
-    QPushButton *btnVolume;
-    QPushButton *btnVolumeControl;
-    QPushButton *addSong;//添加歌曲
-    QPushButton *cutSong;//删除歌曲
-    QMediaPlayer mediaPlayer;//音乐播放
-    qint64 totalDuration;
-    Lrc *lrc;//歌词
-
-    bool play;//是否可以播放
-    bool playerMuted;//是否无声
-
-    QList<QUrl> playlist;
-    int currentIndex;
-    PlaybackMode playbackMode;
 
 private slots:
     void loadFromFile();
     void saveList2File();
     void doubleClickToPlay();
     void playerPause();
-    void playerBackward();
-    void playerForward();
-    void initPosition();//初始化进度条
-    void resetPosition();//重新设置进度条
-    void updatePosition(qint64 currentInfo);//进度条和播放位置显示
-    void setPosition(int position);
-    void positionChanged(qint64 position);
-    void durationChanged(qint64 duration);
-    //四种播放模式：列表循环，随机播放，单曲循环，顺序播放
-    void setPlaybackModeLoop();
-    void setPlaybackModeRandom();
-    void setPlaybackModeCurrentLoop();
-    void setPlaybackModeSequential();
-
-    void getLrc();//获取歌词
-
-    void setMuted();//设置静音
+    void playerBackward();   ///< 上一曲
+    void playerForward();    ///< 下一曲
+    void playNext();         ///< 按播放模式自动切歌
+    void resetPosition();
+    void updatePosition(qint64 position);
+    void onSliderPressed();
+    void onSliderMoved(int position);
+    void onSliderReleased();
+    void onDurationChanged(qint64 duration);
+    void onMediaError(QMediaPlayer::Error error, const QString &errorString);
     void mediaStateChanged(QMediaPlayer::PlaybackState state);
+    void getLrc();
+    void setMuted();
+    void cyclePlaybackMode();
+    void updatePlaybackModeUi();
 
-    void setLrcText(int row);
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
-    void playNext();
+private:
+    void buildMenu();
+    void buildNowPlayingPanel(QHBoxLayout *parent);
+    void buildPlaylistPanel(QHBoxLayout *parent);
+    void buildControlBar(QVBoxLayout *parent);
 
+    void playIndex(int index, bool autoplay = true);
+    void showIdleState();
+    void appendTracks(const QStringList &files, bool autoplayNewest);
+    void addPlaylistRow(const QUrl &url);
+    void trackInfo(const QUrl &url, QString *title, QString *author) const;
+    void refreshPlayButton();
+    void updateControlState();
+    void updateVolumeUi();
+
+    QString playlistFilePath() const;
+    QString formatTime(qint64 ms) const;
+    QString playbackModeText() const;
+
+    Ui::myMusicPlayer *ui = nullptr;
+
+    // 菜单
+    QMenuBar *menu = nullptr;
+    QMenu *menuOpen = nullptr;
+    QAction *actionNew = nullptr;
+    QMenu *menuList = nullptr;
+    QAction *actionList = nullptr;
+    QMenu *menuLogin = nullptr;
+    QAction *actionLogin = nullptr;
+    QMenu *menuAbout = nullptr;
+    QAction *actionAbout = nullptr;
+
+    // 正在播放面板
+    QLabel *title = nullptr;
+    QLabel *author = nullptr;
+    Lrc *lrc = nullptr;
+
+    // 播放列表
+    QTableWidget *tableList = nullptr;
+
+    // 控制条
+    QPushButton *btnMode = nullptr;
+    QPushButton *btnPrev = nullptr;
+    QPushButton *btnPlayPause = nullptr;
+    QPushButton *btnNext = nullptr;
+    QPushButton *btnVolume = nullptr;
+    QPushButton *addSong = nullptr;
+    QPushButton *cutSong = nullptr;
+    QSlider *progressBar = nullptr;
+    QSlider *volumeControl = nullptr;
+    QLabel *timeProgress = nullptr;
+    QLabel *totalTime = nullptr;
+    QLabel *volumeShow = nullptr;
+
+    // 播放核心
+    QMediaPlayer mediaPlayer;
+    QAudioOutput *audioOutput = nullptr;
+    qint64 totalDuration = 0; ///< 当前音轨总时长（毫秒）
+    int sliderRange = 0;      ///< 进度条量程（毫秒，落在 int 范围内）
+    bool seeking = false;     ///< 用户正在拖动进度条
+
+    // 播放列表数据
+    QList<QUrl> playlist;
+    int currentIndex = -1;
+    PlaybackMode playbackMode = PlaybackMode::Loop;
 };
 
 #endif // MYMUSICPLAYER_H
